@@ -65,14 +65,14 @@ exports.login = async (req, res, next) => {
     res.cookie("refresh_token", refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false,
-      sameSite: "none",
+      sameSite: "strict",
       maxAge: rememberMe ? 20 * 24 * 60 * 60 * 1000 : 3600000,
     });
 
     res.cookie("access_token", access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: "strict",
       maxAge: 10 * 365 * 24 * 60 * 60 * 1000, // 10 years
     });
 
