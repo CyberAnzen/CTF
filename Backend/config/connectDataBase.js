@@ -4,7 +4,8 @@ require("dotenv").config();
 const connectDataBase = async () => {
   try {
     await mongoose.connect(
-      process.env.MONGO_DB || "mongodb://127.0.0.1:27017/CyberAnzen",
+      //|| "mongodb://127.0.0.1:27017/CyberAnzen"
+      process.env.MONGO_DB,
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
