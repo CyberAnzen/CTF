@@ -108,7 +108,7 @@ function DisplayChallenge() {
 
     const loop = async () => {
       while (active) {
-        const wait = toggle ? 4000 : 7000;
+        const wait = toggle ? 8000 : 10000;
         toggle = !toggle;
         await new Promise((res) => {
           timerId = setTimeout(res, wait);
