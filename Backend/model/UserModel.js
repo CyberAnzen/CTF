@@ -116,18 +116,40 @@ const UserModel = new mongoose.Schema(
   }
 );
 
-UserModel.pre("save", function (next) {
-  if (!this.profile.avator || this.profile.avator === "") {
-    const result = getRandomAvatar(this.userDetails.gender);
+// Replace only the pre-save hook with this minimal, robust version
+UserModel.pre("save", async function (next) {
+  try {
+    if (!this.profile) this.profile = {};
+    if (!this.profile.avator || this.profile.avator === "") {
+      // getRandomAvatar may be async; await it safely and catch failures
+      let result = null;
+      try {
+        result = await getRandomAvatar(this.userDetails?.gender);
+      } catch (e) {
+        result = null;
+      }
 
-    if (!result.success || !result.avator || !result.avator.path) {
-      return next(new Error("Failed to get random avatar"));
+      if (result && result.success && result.avator && result.avator.path) {
+        this.profile.avator = `${result.avator.path}${result.avator.name}`;
+      } else {
+        // graceful fallback — keep a sensible default so save does not fail
+        this.profile.avator = "/avator/Cat-1.webp";
+        console.warn(
+          "getRandomAvatar failed; using fallback avatar for user:",
+          this.username
+        );
+      }
     }
-
-    this.profile.avator = `${result.avator.path}${result.avator.name}`;
+    return next();
+  } catch (err) {
+    // Never throw here — fall back and allow save to continue
+    console.error("Unexpected error while assigning avatar:", err);
+    if (!this.profile) this.profile = {};
+    this.profile.avator = "/avator/Cat-1.webp";
+    return next();
   }
-  next();
 });
+
 UserModel.index({ teamId: 1 });
 
 UserModel.statics.UpdateTeamId = async function (
