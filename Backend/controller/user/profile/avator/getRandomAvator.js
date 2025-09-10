@@ -22,16 +22,25 @@ function getRandomAvator(gender) {
         let avators = JSON.parse(data);
 
         if (avators.length === 0) {
-            return res.status(404).json({
+            return {
                 success: false,
                 message: 'No avatars available'
-            });
+            }
         }
 
         avators = avators.filter(avator => avator.gender===gender.toLowerCase());
 
         const randomIndex = Math.floor(Math.random() * avators.length);
         const randomAvator = avators[randomIndex];
+        if (!randomAvator) {
+
+            console.log('[getRandomAvator] [Error] No avatars available for the specified');
+            console.log(randomIndex,avators.length,gender.toLowerCase());
+            return {
+                success: false,
+                message: 'No avatars available for the specified'
+            }
+        }
 
         return {
             success: true,
