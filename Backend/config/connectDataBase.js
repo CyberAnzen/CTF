@@ -14,7 +14,7 @@ const connectDataBase = async () => {
       socketTimeoutMS: 45000,
       retryWrites: true,
       w: "majority",
-      autoIndex: false,  // ✅ prevents duplicate schema index warnings in cluster
+      // autoIndex: false,  // ✅ prevents duplicate schema index warnings in cluster
     });
 
     console.log("✅ MongoDB connected & pool ready");
