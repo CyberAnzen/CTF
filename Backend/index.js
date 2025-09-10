@@ -296,7 +296,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-server.listen(port, "127.0.0.1", () => {
+server.listen(port, () => {
   console.log(`CTF platform running on http://127.0.0.1:${port}`);
 });
 
