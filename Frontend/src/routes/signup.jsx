@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { User, Lock, Mail, Phone } from "lucide-react";
+import { User, Lock, Mail, Phone, CheckCircle, XCircle, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { debounce } from "lodash";
@@ -9,7 +9,102 @@ import "../index.css";
 import Turnstile from "react-turnstile";
 import { useAppContext } from "../context/AppContext";
 import { ChevronDown } from "lucide-react";
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+// Popup Modal Component
+const PopupModal = ({ isOpen, onClose, type, title, message }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div
+        className="relative bg-gray-900/95 border-2 border-[#01ffdb]/50 backdrop-blur-xl max-w-md w-full"
+        style={{
+          clipPath:
+            "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))",
+        }}
+      >
+        <div className="p-6">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-[#01ffdb]/70 hover:text-[#01ffdb] transition-colors"
+          >
+            <X size={20} />
+          </button>
+
+          {/* Icon and content */}
+          <div className="flex items-start space-x-4">
+            <div
+              className={`flex-shrink-0 ${
+                type === "success" ? "text-green-400" : "text-red-400"
+              }`}
+            >
+              {type === "success" ? (
+                <CheckCircle size={32} />
+              ) : (
+                <XCircle size={32} />
+              )}
+            </div>
+
+            <div className="flex-1">
+              <h3
+                className={`font-mono font-bold text-lg mb-2 ${
+                  type === "success" ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {title}
+              </h3>
+              <p className="text-[#01ffdb]/80 font-mono text-sm leading-relaxed">
+                {message}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4 w-full bg-gray-700/50 h-1 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${
+                type === "success" ? "bg-green-400" : "bg-red-400"
+              } animate-pulse`}
+              style={{
+                animation: "shrink 5s linear forwards",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes shrink {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 export default function Signup() {
   const { loggedIn, setLoggedIn, User, fetchProfile } = useAppContext();
@@ -17,12 +112,22 @@ export default function Signup() {
   const navigate = useNavigate();
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaVerified, setCaptchaVerified] = useState(false);
+
+  // Popup states
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    type: "success", // 'success' or 'error'
+    title: "",
+    message: "",
+  });
+
   useEffect(() => {
     if (loggedIn || User) {
       fetchProfile();
       navigate("/profile");
     }
   }, [loggedIn, User, navigate]);
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -171,6 +276,7 @@ export default function Signup() {
   }, [formData.mobile, touched.mobile]);
 
   const SignupSubmit = async (data) => {
+    setIsLoading(true);
     try {
       const numericData = {
         captcha: captchaToken,
@@ -187,14 +293,51 @@ export default function Signup() {
           },
         }
       );
+
+      // Show success popup
+      setPopup({
+        isOpen: true,
+        type: "success",
+        title: "ACCOUNT CREATED",
+        message:
+          "Your account has been successfully created! Redirecting to login page...",
+      });
+
       setTimeout(() => {
-        alert("Form submitted successfully!");
         navigate("/login");
-      }, 500);
+      }, 2000);
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("There was an error submitting the form.");
+      let errorMessage = "There was an error submitting the form.";
+      if (error.response && error.response.data) {
+        const errData = error.response.data;
+        if (errData.error === "Duplicate") {
+          errorMessage = `${errData.message}: ${errData.value}`;
+        } else if (errData.error === "Validation failed") {
+          errorMessage = errData.details.map((d) => d.message).join(", ");
+        } else if (errData.error) {
+          errorMessage = errData.error;
+        } else if (errData.message) {
+          errorMessage = errData.message;
+        }
+      }
+
+      // Show error popup
+      setPopup({
+        isOpen: true,
+        type: "error",
+        title: "REGISTRATION FAILED",
+        message: errorMessage,
+      });
+
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({ ...prev, isOpen: false }));
   };
 
   const handleBlur = (field) => {
@@ -422,6 +565,16 @@ export default function Signup() {
     };
   }, []);
 
+  // Hide error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const hideTimer = setTimeout(() => {
+        setError("");
+      }, 5000);
+      return () => clearTimeout(hideTimer);
+    }
+  }, [error]);
+
   const isFormComplete = () => {
     const requiredFields = [
       "username",
@@ -451,6 +604,16 @@ export default function Signup() {
   return (
     <div className="flex items-center justify-center px-2 sm:px-4 lg:px-6 relative overflow-hidden min-h-screen max-h-screen pt-4 sm:pt-6 lg:pt-10 pb-0">
       <ParticleBackground />
+
+      {/* Popup Modal */}
+      <PopupModal
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+      />
+
       {/* Cyberpunk grid overlay */}
       <div className="absolute inset-0 opacity-10">
         <div

@@ -39,7 +39,8 @@ async function initLeaderboard() {
         identifierId,
         score,
         entry.identifier === "team",
-        entry.updatedAt || new Date()
+        entry.updatedAt || new Date(),
+        true // init flag to skip publish
       );
     }
 

@@ -129,9 +129,9 @@ const TeamSchema = new Schema(
         },
         code: {
           type: String,
-          default: generateInviteCode,
+          default: () => generateInviteCode(10),
           required: true,
-          unique: true,
+          index: true, // non-unique index if you prefer to rely on app-level uniqueness plus partial unique index
         },
       },
     ],
@@ -203,6 +203,13 @@ TeamSchema.pre("validate", async function (next) {
 // ensure uniqueness for invites.code only when code is a string
 // Indexes
 TeamSchema.index({ teamName: 1 }, { unique: true });
+// TeamSchema.index(
+//   { "invites.code": 1 },
+//   {
+//     unique: true,
+//     partialFilterExpression: { "invites.code": { $exists: true, $ne: null } },
+//   }
+// );
 
 // generateUniqueInviteCode(maxAttempts = 5, length = 10)
 // - tries up to maxAttempts to find a code not already present in the collection.

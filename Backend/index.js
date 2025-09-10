@@ -16,8 +16,8 @@ const mongoSanitize = require("express-mongo-sanitize");
 const ConnectDataBase = require("./config/connectDataBase");
 const { connectRedis } = require("./redis/config/connectRedis");
 const initializeCaches = require("./cache/initCache");
-const initLeaderboard = require("./redis/initLeaderboard");
-const LeaderboardManager = require("./controller/CTF/LeaderBoard/leaderBoardManager");
+//const initLeaderboard = require("./redis/initLeaderboard");
+//const LeaderboardManager = require("./controller/CTF/LeaderBoard/leaderBoardManager");
 const { MongoSanitizer } = require("./middleware/Mongosanitiser");
 //initLeaderboardSocket(server);
 
@@ -34,8 +34,8 @@ async function initializeServer() {
     await connectRedis();
     // attach leaderboard websocket to same HTTP server
 
-    await initLeaderboard(); // Initialize leaderboard from MongoDB
-    LeaderboardManager.attachToServer(server);
+    //await initLeaderboard(); // Initialize leaderboard from MongoDB
+    //LeaderboardManager.attachToServer(server);
   } catch (err) {
     console.error("❌ Initialization error:", err);
     process.exit(1); // Exit if initialization fails
@@ -58,8 +58,7 @@ const requestLogger = require("./middleware/requestLogger");
 const errorLogger = require("./middleware/errorLogger");
 const gracefulShutdown = require("./utilies/gracefulShutdown");
 
-const FRONTEND_URL =
-  process.env.FRONTEND_URL || "https://cyberanzen.netlify.app";
+const FRONTEND_URL = "https://cyberanzen.icu";
 
 let server = http.createServer(app);
 
@@ -187,7 +186,7 @@ app.use(MongoSanitizer());
 app.use(MongoSanitizer({ mode: "sanitize" })); // Serve only challenge files (not full public folder)
 app.use(
   "/public",
-  cors(staticCorsOptions), // <-- apply CORS middleware for /public
+  // cors(staticCorsOptions), // <-- apply CORS middleware for /public
   // downloadLimiter,
   // Auth({ timestamp: false }),
   express.static(path.join(__dirname, "public/"), {
@@ -297,8 +296,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-server.listen(port, () => {
-  console.log(`CTF platform running on port ${port}`);
+server.listen(port, "127.0.0.1", () => {
+  console.log(`CTF platform running on http://127.0.0.1:${port}`);
 });
+
 process.on("SIGINT", () => gracefulShutdown(loggerWorker));
 process.on("SIGTERM", () => gracefulShutdown(loggerWorker));

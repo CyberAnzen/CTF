@@ -1,0 +1,951 @@
+root@srv808364:~# cat /etc/nginx/sites-available/mynodeapp.conf
+# Frontend (React)
+server {
+    listen 127.0.0.1:80;
+    server_name cyberanzen.icu www.cyberanzen.icu;
+
+    root /var/www/frontend;   # adjust if your build is in /var/www/frontend/assets
+    index index.html;
+
+    access_log /var/log/nginx/cyberanzen_access.log;
+    error_log  /var/log/nginx/cyberanzen_error.log warn;
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
+
+# Backend (Node API)
+server {
+    listen 127.0.0.1:80;
+    server_name api.cyberanzen.icu;
+
+    access_log /var/log/nginx/api_access.log;
+    error_log  /var/log/nginx/api_error.log warn;
+
+    location / {
+        proxy_pass http://127.0.0.1:4000;
+        proxy_http_version 1.1;
+
+        # WebSocket headers
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 86400s;
+        proxy_read_timeout 86400s;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # WebSocket endpoint - specific path for WebSocket connections
+    location /ws/ {
+        proxy_pass http://127.0.0.1:5000/ws/;
+        proxy_http_version 1.1;
+
+        # WebSocket headers
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeout settings for WebSocket
+        proxy_connect_timeout 7d;
+        proxy_send_timeout 7d;
+        proxy_read_timeout 7d;
+    }
+}
+
+root@srv808364:~# sudo nano /etc/nginx/conf.d/default.conf
+root@srv808364:~# sudo cat /etc/nginx/conf.d/default.conf
+server {
+    listen 127.0.0.1:80 default_server;
+    listen [::1]:80 default_server;
+    server_name _;
+    return 444;  # Nginx special code: close connection without response
+}
+
+ 783  Test#VpS-().&@?'#,/;+31
+  784  free -h
+  785  mongosh
+  786  cd /home/ubuntu/E-learning/Backend/logger/
+  787  cd controller/
+  788  nano access.log
+  789  mongosh
+  790  top
+  791  mongosh
+  792  free -h
+  793  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  794  nano access.log
+  795  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  796  nano access.log
+  797  cd ../
+  798  ls
+  799  sudo systemctl status backend
+  800  sudo journalctl -u backend.service -n 100
+  801  cd ../
+  802  git pull
+  803  sudo systemctl restart backend
+  804  sudo systemctl status backend
+  805  sudo journalctl -u backend.service -n 100
+  806  mongosh
+  807  sudo journalctl -u backend.service -n 100
+  808  sudo journalctl -u backend.service -n 10
+  809  exit
+  810  sudo journalctl -u backend.service -n 100
+  811  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  812  nano access.log
+  813  tail -f access.log
+  814  mongosh
+  815  tail -f access.log
+  816  exit
+  817  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  818  cd ../
+  819  git pull
+  820  sudo systemctl restart backend
+  821  sudo systemctl status backend
+  822  npm i
+  823  cd Backend
+  824  npm i
+  825  sudo systemctl restart backend
+  826  ls
+  827  cd middleware
+  828  ls
+  829  sudo systemctl status backend
+  830  sudo journalctl -u backend.service -n 100
+  831  sudo journalctl -u backend.service -n 10
+  832  exit
+  833  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  834  ls
+  835  mv access.log access_$(date +"%Y-%m-%d_%H-%M-%S").log
+  836  ls
+  837  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  838  ls
+  839  exit
+  840  mongosh
+  841  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  842  ls
+  843  tail -f access.log
+  844  tail  access.log
+  845  tail -f access.log
+  846  sudo systemctl status backend
+  847  sudo journalctl -u backend.service -n 10
+  848  sudo journalctl -u backend.service -n 100
+  849  sudo systemctl restart backend
+  850  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  851  tail -f access.log
+  852  mongosh
+  853  tail -f access.log
+  854  exit
+  855  cd ../
+  856  cd /home/ubuntu
+  857  ls
+  858  cd E-Learning
+  859  ls
+  860  cd E-learning
+  861  ls
+  862  cd Backend
+  863  ls
+  864  cd logger
+  865  ls
+  866  cd controller
+  867  ls
+  868  tail -f access.log
+  869  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  870  tail -f access.log
+  871  exit
+  872  mongosh
+  873  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  874  tail -f access.log
+  875  tail 100\ -f access.log
+  876  exit
+  877  cd /home/ubuntu/E-learning/Backend/logger/controller/
+  878  sudo systemctl status backend
+  879  sudo journalctl -u backend.service -n 100
+  880  sudo journalctl -u backend.service -n 10
+  881  tail 100\ -f access.log
+  882  tail 1000 -f access.log
+  883  tail  -f access.log
+  884  sudo systemctl status backend
+  885  sudo journalctl -u backend.service -n 100
+  886  tail  access.log
+  887  tail -n 1000 -f access.log
+  888  logout
+  889  lscpu
+  890  free -h
+  891  lscpu
+  892  neofetch
+  893  sudo lshw -short
+  894  logout
+  895  cd /home/ubuntu/E-learning/Backend/logger/controller/tail -f access.log
+  896  tail -f /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  897  tail  /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  898  cat /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  899  pluma /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  900  sudo apt install goaccess -y
+  901  goaccess /home/ubuntu/E-learning/Backend/logger/controller/access.log --log-format=COMBINED -o report.html
+  902  pluma /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  903  tail -f /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  904  jq -r '"\(.client_ip) - - [\(.timestamp)] \"\(.method) \(.url) \(.http_version)\" \(.status_code) \(.bytes_sent) \"\(.referrer)\" \"\(.user_agent)\""' access.log > access_combined.log
+  905  cd /home/ubuntu/E-learning/Backend/logger/controller
+  906  jq -r '"\(.client_ip) - - [\(.timestamp)] \"\(.method) \(.url) \(.http_version)\" \(.status_code) \(.bytes_sent) \"\(.referrer)\" \"\(.user_agent)\""' access.log > access_combined.log
+  907  ls
+  908  goaccess access_combined.log --log-format=COMBINED -o report.html
+  909  tail -f /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  910  git pull
+  911  sudo systemctl status backend
+  912  sudo systemctl restart backend
+  913  sudo systemctl status backend
+  914  sudo journalctl -u backend.service -n 100
+  915  sudo journalctl -u backend.service -n 10
+  916  sudo journalctl -u backend.service -n 30
+  917  tail -f /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  918  sudo journalctl -u backend.service -n 30
+  919  sudo journalctl -u backend.service -n 100
+  920  tail -f /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  921  sudo journalctl -u backend.service -n 100
+  922  tail -f /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  923  mongosh
+  924  ls
+  925  sudo journalctl -u backend.service -n 100
+  926  sudo journalctl -u backend.service -n 300
+  927  tail -f /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  928  tail -n 200 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  929  logout
+  930  tail -n 200 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  931  sudo journalctl -u backend.service -n 300
+  932  tail -n 500 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  933  mongosh
+  934  tail -n 1000 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  935  tail -n 2000 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  936  mv access.log access_$(date +"%Y-%m-%d_%H-%M-%S").log
+  937  cd /home/ubuntu/E-learning/Backend/logger/controller
+  938  mv access.log access_$(date +"%Y-%m-%d_%H-%M-%S").log
+  939  ls
+  940  exit
+  941  mongosh
+  942  tail -n 2000 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+  943  sudo journalctl -u backend.service -n 300
+  944  cd /home/ubuntu/E-learning
+  945  git pull
+  946  sudo systemctl restart backend
+  947  sudo systemctl status backend
+  948  mognosh
+  949  sudo journalctl -u backend.service -n 300
+  950  mongosh
+  951  sudo journalctl -u backend.service -n 300
+  952  sudo journalctl -u backend.service -n 10
+  953  sudo journalctl -u backend.service -n 20
+  954  mongosh
+  955  sudo systemctl restart backend
+  956  sudo journalctl -u backend.service -n 30
+  957  mongosh
+  958  sudo systemctl restart backend
+  959  sudo systemctl stop backend
+  960  sudo systemctl restart backend
+  961  sudo systemctl status backend
+  962  sudo systemctl stop backend
+  963  sudo systemctl status backend
+  964  sudo systemctl restart backend
+  965  sudo systemctl restart nginx
+  966  sudo systemctl restart nginx.service
+  967  sudo systemctl restart Nginx
+  968  root@srv808364:~# sudo systemctl restart nginx
+  969  Job for nginx.service failed because the control process exited with error code.
+  970  See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+  971  root@srv808364:~# sudo systemctl restart nginx.service
+  972  Job for nginx.service failed because the control process exited with error code.
+  973  See "systemctl status nginx.service" and "journalctl -xeu nginx.service" for details.
+  974  root@srv808364:~# sudo systemctl restart Nginx
+  975  Failed to restart Nginx.service: Unit Nginx.service not found.
+  976  root@srv808364:~#
+  977  systemctl status nginx.service
+  978  sudo nano /etc/nginx/nginx.conf
+  979  journalctl -xeu nginx.service
+  980  sudo nano /etc/nginx/nginx.conf
+  981  grep -R "http {" /etc/nginx/
+  982  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+  983  sudo cat /etc/nginx/sites-available/mynodeapp.conf
+  984  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+  985  sudo systemctl restart Nginx
+  986  sudo systemctl restart nginx
+  987  sudo systemctl status nginx
+  988  curl localhost:80/api/challenge
+  989  cd /home/ubuntu/E-learning/Backend/logger/controller
+  990  git pull
+  991  sudo systemctl restart backend
+  992  sudo journalctl -u backend.service -n 300sudo nano /etc/nginx/sites-available/mynodeapp.conf
+  993  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+  994  nginx -t
+  995  sudo systemctl restart backend
+  996  sudo systemctl restart nginx
+  997  sudo systemctl status nginx
+  998  sudo systemctl status backend
+  999  sudo journalctl -u backend.service -n 300
+ 1000  sudo journalctl -u backend.service -n 100
+ 1001  nginx -t
+ 1002  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1003  sudo systemctl restart nginx
+ 1004  sudo systemctl status backend
+ 1005  sudo systemctl status nginx
+ 1006  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1007  sudo systemctl restart nginx
+ 1008  sudo systemct status nginx
+ 1009  sudo systemctl status nginx
+ 1010  exit
+ 1011  cd /home/ubuntu/E-learning/Backend/logger/controller
+ 1012  git pull
+ 1013  sudo systemctl restart backend
+ 1014  sudo systemctl status backend
+ 1015  cd /home/ubuntu/E-learning/Backend/logger/controller
+ 1016  git pull
+ 1017  sudo systemctl restart backend
+ 1018  sudo systemctl status backend
+ 1019  cd /home/ubuntu/E-learning/Backend/logger/controller
+ 1020  git pull
+ 1021  sudo systemctl restart nginx
+ 1022  sudo systemctl status nginx
+ 1023  sudo systemctl restart backend
+ 1024  sudo systemctl status backend
+ 1025  Test#VpS-().&@?'#,/;+31# Install
+ 1026  sudo apt update && sudo apt install speedtest-cli -y   # Ubuntu/Debian
+ 1027  speedtest-cli
+ 1028  mongosh
+ 1029  sudo systemctl restart backend
+ 1030  sudo systemctl status backend
+ 1031  sudo systemctl restart backend
+ 1032  sudo systemctl status backend
+ 1033  cd /home/ubuntu/E-learning/Backend/logger/controller
+ 1034  git pull
+ 1035  sudo systemctl restart backend
+ 1036  sudo systemctl status backend
+ 1037  sudo systemctl restart backend
+ 1038  cd /home/ubuntu/E-learning/Backend/logger/controller
+ 1039  git pull
+ 1040  sudo systemctl restart backend
+ 1041  cd ../
+ 1042  ls
+ 1043  nano .env
+ 1044  git pull
+ 1045  sudo systemctl restart backend
+ 1046  sudo systemctl restart nginx
+ 1047  sudo systemctl status nginx
+ 1048  git pull
+ 1049  sudo systemctl restart nginx
+ 1050  sudo systemctl restart backend
+ 1051  git pull
+ 1052  sudo systemctl restart backend
+ 1053  git pull
+ 1054  sudo systemctl restart backend
+ 1055  sudo systemctl restart nginx
+ 1056  sudo systemctl status backend
+ 1057  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1058  sudo systemctl restart nginx
+ 1059  sudo systemctl status backend
+ 1060  git pull
+ 1061  sudo systemctl status backend
+ 1062  sudo systemctl restart backend
+ 1063  sudo systemctl status backend
+ 1064  npm i
+ 1065  sudo systemctl restart backend
+ 1066  sudo systemctl status backend
+ 1067  git pull
+ 1068  sudo systemctl restart backend
+ 1069  sudo systemctl status backend
+ 1070  sudo systemctl restart backend
+ 1071  git pull
+ 1072  sudo systemctl restart backend
+ 1073  npm i
+ 1074  sudo systemctl restart backend
+ 1075  git pull
+ 1076  sudo systemctl restart backend
+ 1077  sudo systemctl status backend
+ 1078  git pull
+ 1079  sudo systemctl restart backend
+ 1080  git pull
+ 1081  sudo systemctl restart backend
+ 1082  git pull
+ 1083  sudo systemctl restart backend
+ 1084  sudo systemctl status nginx
+ 1085  sudo systemctl restart backend
+ 1086  curl localhost:4000
+ 1087  sudo systemctl restart backend
+ 1088  sudo systemctl restart ngnix
+ 1089  sudo systemctl restart nginx
+ 1090  sudo systemctl status nginx
+ 1091  cd /home/ubuntu/E-learning/Backend/logger/controller
+ 1092  git pull
+ 1093  sudo systemctl restart backend
+ 1094  git pull
+ 1095  sudo systemctl restart backend
+ 1096  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1097  sudo systemctl restart ngnix
+ 1098  sudo systemctl restart ngninx
+ 1099  sudo systemctl restart nginx
+ 1100  sudo systemctl restart backend
+ 1101  cd /home/ubuntu/E-learning/Backend/logger/controller
+ 1102  git pull
+ 1103  sudo systemctl restart backend
+ 1104  sudo systemctl restart backend
+ 1105  git pull
+ 1106  sudo systemctl restart backend
+ 1107  sudo journalctl -u backend.service -n 300
+ 1108  sudo systemctl status backend
+ 1109  tail -n 100 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+ 1110  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1111  sudo nginx -t
+ 1112  sudo systemctl reload nginx
+ 1113  sudo systemctl status nginx
+ 1114  cd /home/ubuntu/E-learning/Backend/logger/
+ 1115  ls
+ 1116  cd controller/
+ 1117  tail -f access.log
+ 1118  # List all listening TCP ports and their services
+ 1119  sudo ss -tulnp
+ 1120  tail -f access.log
+ 1121  cd /etc/nginx/sites-available/
+ 1122  ls
+ 1123  nano mynodeapp.conf
+ 1124  sudo tail -f /var/log/nginx/access.log
+ 1125  ps aux | grep node
+ 1126  sudo systemctl status node  # if run as a service
+ 1127  # or
+ 1128  ps aux | grep node
+ 1129  sudo systemctl status nodeD
+ 1130  sudo systemctl status backend
+ 1131  nano mynodeapp.conf
+ 1132  sudo systemctl status nginx
+ 1133  sudo systemctl restart backend
+ 1134  tail -n 100 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+ 1135  sudo systemctl restart backend
+ 1136  sudo systemctl restart backend
+ 1137  sudo systemctl reload nginx
+ 1138  sudo systemctl restart backend
+ 1139  tail -n 100 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+ 1140  cd /home/ubuntu/E-learning/Backend/logger/
+ 1141  git pull
+ 1142  sudo systemctl restart backend
+ 1143  tail -f /var/log/nginx/access.log
+ 1144  tail -f /var/log/nginx/error.log
+ 1145  bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+ 1146  bash <(curl -Ss https://my-netdata.io/kickstart.sh)>
+ 1147  history
+ 1148  pm2 delete backend
+ 1149  pm2 status
+ 1150  history
+ 1151  nano backend.service
+ 1152  sudo nano /etc/systemd/system/backend.service
+ 1153  systemctl restart backend
+ 1154  systemctl daemon-reload
+ 1155  systemctl restart backend
+ 1156  systemctl status backend
+ 1157  systemctl disable backend
+ 1158  tail -n 100 /home/ubuntu/E-learning/Backend/
+ 1159  cd /home/ubuntu/E-learning/Backend/
+ 1160  root@srv808364:~# nano backend.service
+ 1161  root@srv808364:~# sudo nano /etc/systemd/system/backend.service
+ 1162  root@srv808364:~# systemctl restart backend
+ 1163  Warning: The unit file, source configuration file or drop-ins of backend.service changed on disk. Run 'systemctl daemon-reload' to reload units.
+ 1164  root@srv808364:~# systemctl daemon-reload
+ 1165  root@srv808364:~# systemctl restart backend
+ 1166  root@srv808364:~# systemctl status backend
+ 1167  ● backend.service - Node.js Backend Service
+ 1168  root@srv808364:~#pm2 start index.js --name backend -i max --env production
+ 1169  pm2 start index.js --name backend -i max --env production
+ 1170  pm2 delete backend
+ 1171  curl localhost:4000/api
+ 1172  pm2 start index.js --name backend -i max --env production
+ 1173  pm2 start index.js --name backend -f -i max --env production
+ 1174  curl localhost:4000/api
+ 1175  curl localhost:4000/api/challenge
+ 1176  curl http://localhost:4000/api/challenge
+ 1177  curl http://localhost:4000
+ 1178  systemctl restart backend
+ 1179  curl http://localhost:4000/api/challenge
+ 1180  logout
+ 1181  htop
+ 1182  tail -n 100 /home/ubuntu/E-learning/Backend/logger/controller/access.log
+ 1183  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1184  sudo cat /etc/nginx/sites-available/mynodeapp.conf
+ 1185  sudo npm install -g pm2
+ 1186  cd /home/ubuntu/E-learning/Backend
+ 1187  pm2 start index.js --name backend --env production
+ 1188  pm2 status
+ 1189  pm2 start index.js --name backend -i max --env production
+ 1190  pm2 delete backend
+ 1191  pm2 start index.js --name backend -i max --env production
+ 1192  pm2 delete backend
+ 1193  pm2 status
+ 1194  history
+ 1195  sudo nano /etc/cloudflared/config.yml
+ 1196  cloudflared login
+ 1197  sudo cloudflared login
+ 1198  cd /root/.cloudflared/cert.pem
+ 1199  cd /root/cloudflared
+ 1200  cd /root/.cloudflared
+ 1201  ls
+ 1202  mv 6ecea6ed-6591-4258-af65-3f119239c919.json 6ecea6ed-6591-4258-af65-3f119239c919.json.bak
+ 1203  ls
+ 1204  mv  cert.pem  cert.pem.bak
+ 1205  ls
+ 1206  sudo cloudflared login
+ 1207  cloudflared tunnel delete cyberanzen
+ 1208  sudo cloudflared tunnel delete cyberanzen
+ 1209  sudo cloudflared tunnel delete -f cyberanzen
+ 1210  sudo nano /etc/cloudflared/config.yml
+ 1211  sudo systemctl stop cloudflared
+ 1212  cloudflared tunnel create cyberanzen
+ 1213  ls
+ 1214  sudo nano /etc/cloudflared/config.yml
+ 1215  cloudflared tunnel route dns cyberanzen api.cyberanzen.icu
+ 1216  sudo systemctl enable cloudflared
+ 1217  sudo systemctl restart cloudflared
+ 1218  sudo systemctl status cloudflared
+ 1219  cloudflared tunnel list
+ 1220  systemctl status nginx
+ 1221  sudo systemctl restart backend
+ 1222  sudo systemctl status backend
+ 1223  nano backend.service
+ 1224  sudo nano /etc/systemd/system/backend.service
+ 1225  sudo systemctl restart backend
+ 1226  systemctl daemon-reload
+ 1227  sudo systemctl restart backend
+ 1228  sudo systemctl status backend
+ 1229  sudo nano /etc/systemd/system/backend.service
+ 1230  sudo systemctl restart backend
+ 1231  sudo systemctl status backend
+ 1232  clear
+ 1233  sudo systemctl status backend
+ 1234  systemctl daemon-reload
+ 1235  sudo systemctl restart backend
+ 1236  sudo systemctl status backend
+ 1237  ls /home/ubuntu/E-learning/Backend/index.js
+ 1238  cd ls /home/ubuntu/E-learning/Backend
+ 1239  ls
+ 1240  cd ../
+ 1241  sudo nano /etc/systemd/system/backend.service
+ 1242  sudo systemctl daemon-reload
+ 1243  sudo systemctl restart backend
+ 1244  journalctl -u backend -n 50 --no-pager
+ 1245  sudo lsof -i :4000
+ 1246  pm2 delete all
+ 1247  pm2 kill
+ 1248  sudo systemctl restart backend
+ 1249  sudo systemctl status backend
+ 1250  sudo systemctl enable backend
+ 1251  sudo systemctl status backend
+ 1252  curl -I localhost:4000
+ 1253  curl -I localhost:4000/api/challenge
+ 1254  curl -I localhost:4000/api/challenge/
+ 1255  cd /home/ubuntu/E-learning/Backend
+ 1256  ls
+ 1257  git pull
+ 1258  sudo systemctl restart backend
+ 1259  sudo systemctl status backend
+ 1260  curl -I localhost:4000/api/challenge/
+ 1261  cd /home/ubuntu/E-learning/Backend
+ 1262  cd ../
+ 1263  cd Frontend
+ 1264  ls
+ 1265  nano .env
+ 1266  npm run build
+ 1267  cd /var/www/
+ 1268  ls
+ 1269  cd frontend
+ 1270  ls
+ 1271  sudo cp -r /home/ubuntu/E-learning/Frontend/dist/* /var/www/frontend/
+ 1272  sudo systemctl reload nginx
+ 1273  cd /home/ubuntu/E-learning/Backend
+ 1274  ls
+ 1275  nano .env
+ 1276  systemctl restart backend
+ 1277  systemctl status backend
+ 1278  sudo systemctl status backend
+ 1279  cd
+ 1280  sudo nano /etc/systemd/system/backend.service
+ 1281  sudo systemctl restart backend
+ 1282  systemctl daemon-reload
+ 1283  sudo systemctl status backend
+ 1284  cd  /home/ubuntu/E-learning/Backend
+ 1285  cd ../
+ 1286  ls
+ 1287  cd Frontend
+ 1288  ls
+ 1289  npm run build
+ 1290  npm i
+ 1291  npm run build
+ 1292  ls
+ 1293  cd dist
+ 1294  ls
+ 1295  cd assests
+ 1296  cd assets
+ 1297  ls
+ 1298  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1299  sudo mkdir -p /var/www/frontend
+ 1300  sudo cp -r /home/ubuntu/E-learning/Frontend/dist/* /var/www/frontend/
+ 1301  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1302  cd /var/www/frontend/
+ 1303  ls
+ 1304  cd assests
+ 1305  cd assets
+ 1306  ls
+ 1307  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1308  htop
+ 1309  journalctl -u backend -n 50 --no-pager
+ 1310  htop
+ 1311  journalctl -u backend -n 50 --no-pager
+ 1312  htop
+ 1313  sudo cd /home/ubuntu/E-learning
+ 1314  cd /home/ubuntu/E-learning
+ 1315  git pull
+ 1316  cd Backend
+ 1317  git pull
+ 1318  git pull --autostash
+ 1319  sudo systemctl restart backnedc
+ 1320  sudo systemctl restart backend
+ 1321  htop
+ 1322  journalctl -u backend -n 50 --no-pager
+ 1323  journalctl -u backend -n 500 --no-pager
+ 1324  htop
+ 1325  sudo nano /etc/cloudflared/config.yml
+ 1326  sudo nano /etc/systemd/system/backend.service
+ 1327  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1328  sudo nano /etc/cloudflared/config.yml
+ 1329  sudo nano /etc/nginx/sites-available/mynodeapp.conf
+ 1330  sudo ln -s /etc/nginx/sites-available/cyberanzen.conf /etc/nginx/sites-enabled/
+ 1331  sudo nginx -t
+ 1332  sudo systemctl reload nginx
+ 1333  sudo systemctl restart cloudflared
+ 1334  sudo systemctl reload nginx
+ 1335  sudo nano /etc/nginx/sites-available/cyberanzen.conf
+ 1336  sudo nginx -t
+ 1337  sudo ln -s /etc/nginx/sites-available/mynodeapp.conf.conf /etc/nginx/sites-enabled/
+ 1338  sudo nginx -t
+ 1339  grep include /etc/nginx/nginx.conf | grep sites-enabled
+ 1340  ls -l /etc/nginx/sites-enabled/
+ 1341  sudo rm -f /etc/nginx/sites-enabled/cyberanzen.conf
+ 1342  sudo ln -s /etc/nginx/sites-available/mynodeapp.conf /etc/nginx/sites-enabled/
+ 1343  vdfl;mdsl;,fml;s'
+ 1344  # remove the broken/confusing symlinks
+ 1345  sudo rm -f /etc/nginx/sites-enabled/cyberanzen.conf
+ 1346  sudo rm -f /etc/nginx/sites-enabled/mynodeapp.conf.conf
+ 1347  # make sure only the correct one is linked
+ 1348  sudo ln -sf /etc/nginx/sites-available/mynodeapp.conf /etc/nginx/sites-enabled/mynodeapp.conf
+ 1349  sudo nginx -t
+ 1350  sudo systemctl reload nginx
+ 1351  htop
+ 1352  nano /etc/nginx/sites-enabled/cyberanzen.conf
+ 1353  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1354  sudo nginx -t
+ 1355  sudo systemctl reload nginx
+ 1356  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1357  cd  /var/www/frontend/assets
+ 1358  ls
+ 1359  cd ../
+ 1360  ls
+ 1361  sudo nano /etc/cloudflared/config.yml
+ 1362  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1363  sudo nano /etc/cloudflared/config.yml
+ 1364  sudo systemctl restart cloudflared
+ 1365  curl -I http://127.0.0.1:80
+ 1366  curl -I http://127.0.0.1:80/index.html
+ 1367  cd `
+ 1368  cd ~
+ 1369  dig +short cyberanzen.icu
+ 1370  dig +short www.cyberanzen.icu
+ 1371  dig +short api.cyberanzen.icu
+ 1372  sudo nano /etc/cloudflared/config.yml
+ 1373  sudo systemctl restart cloudflared
+ 1374  curl -I http://cyberanzen.icu
+ 1375  curl -I http://api.cyberanzen.icu
+ 1376  cloudflared tunnel route dns cyberanzen cyberanzen.icu
+ 1377  cloudflared tunnel route dns cyberanzen www.cyberanzen.icu
+ 1378  curl -I http://cyberanzen.icu
+ 1379  curl http://cyberanzen.icu
+ 1380  curl https://cyberanzen.icu
+ 1381  curl https://api.cyberanzen.icu
+ 1382  curl http://api.cyberanzen.icu
+ 1383  dig +short cyberanzen.icu
+ 1384  dig +short www.cyberanzen.icu
+ 1385  sudo systemd-resolve --flush-caches
+ 1386  curl -I https://cyberanzen.icu
+ 1387  sudo nano /etc/cloudflared/config.yml
+ 1388  curl -I localhost:80
+ 1389  curl  localhost:80
+ 1390  curl -I https://cyberanzen.icu
+ 1391  dig cyberanzen.icu +short
+ 1392  dig www.cyberanzen.icu +short
+ 1393  cloudflared tunnel route dns cyberanzen cyberanzen.icu
+ 1394  cloudflared tunnel route dns cyberanzen www.cyberanzen.icu
+ 1395  htop
+ 1396  logout
+ 1397  cd /home/ubuntu/E-learning/Backend/
+ 1398  ls
+ 1399  git pull
+ 1400  sudo systemctl restart backend
+ 1401  sudo systemctl status backend
+ 1402  htop
+ 1403  cd /home/ubuntu/E-learning/Backend
+ 1404  ls
+ 1405  cd controller
+ 1406  ls
+ 1407  cd ../
+ 1408  cd logger
+ 1409  ls
+ 1410  cd controller
+ 1411  ls
+ 1412  tail -f access.log
+ 1413  sudo systemctl status backend
+ 1414  journalctl -u backend -n 50 --no-pager
+ 1415  cd /home/ubuntu/E-learning
+ 1416  git pull
+ 1417  cd backend
+ 1418  git pull
+ 1419  git pull
+ 1420  git status
+ 1421  cd Backend
+ 1422  git pull
+ 1423  git fetch origin Dev
+ 1424  git reset --hard origin/Dev
+ 1425  sudo systemctl restart backend
+ 1426  ls
+ 1427  cd controller/user
+ 1428  ls
+ 1429  cd Authenticattion
+ 1430  ls
+ 1431  nano Signup.js
+ 1432  cd /home/ubuntu/E-learning/Backend/
+ 1433  cd ../
+ 1434  git pull
+ 1435  cd Frontend
+ 1436  npm run build
+ 1437  sudo systemctl restart nginx
+ 1438  history
+ 1439  sudo cp -r /home/ubuntu/E-learning/Frontend/dist/* /var/www/frontend/
+ 1440  sudo systemctl restart nginx
+ 1441  sudo systemctl status nginx
+ 1442  htop
+ 1443  cd /backup
+ 1444  ls
+ 1445  ls -lh /backup
+ 1446  du -sh /backup/vps_backup
+ 1447  htop
+ 1448  cd /home/ubuntu/E-learning/Backend/
+ 1449  cd ../
+ 1450  ls
+ 1451  cd
+ 1452  cd Frontend
+ 1453  cd /home/ubuntu/E-learning/Backend/
+ 1454  cd ../
+ 1455  ls
+ 1456  cd Frontend
+ 1457  ls
+ 1458  nano .env
+ 1459  cd /home/ubuntu/E-learning/Backend/
+ 1460  git pull
+ 1461  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1462  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1463  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1464  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1465  history
+ 1466  clear
+ 1467  sudo systemctl restart backend
+ 1468  sudo systemctl status backen
+ 1469  sudo systemctl restart leaderboard
+ 1470  sudo systemctl status leaderboard
+ 1471  sudo nano /etc/systemd/system/leaderboard.service
+ 1472  # Reload systemd
+ 1473  sudo systemctl daemon-reload
+ 1474  # Enable the service to start on boot
+ 1475  sudo systemctl enable leaderboard.service
+ 1476  # Start the service
+ 1477  sudo systemctl start leaderboard.service
+ 1478  # Check status
+ 1479  sudo systemctl status leaderboard.service
+ 1480  # View logs if it's still failing
+ 1481  sudo journalctl -u leaderboard.service -f
+ 1482  sudo systemctl status leaderboard
+ 1483  sudo systemctl restart niginx
+ 1484  sudo systemctl restart nginx
+ 1485  htop
+ 1486  sudo systemctl stop nginx
+ 1487  sudo systemctl status nginx
+ 1488  lssudo apt update
+ 1489  sudo apt install rsync
+ 1490  sudo rsync -aAXv --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} / /backup/vps_backup
+ 1491  sudo mkdir -p /backup/vps_backup
+ 1492  ls -ld /backup/vps_backup
+ 1493  df -h /backup
+ 1494  sudo rsync -aAXv --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} / /backup/vps_backup
+ 1495  sudo tar -czf /backup/vps_backup.tar.gz -C /backup/vps_backup .
+ 1496  sudo systemctl stop nginx
+ 1497  sudo systemctl status nginx
+ 1498  sudo systemctl restart nginx
+ 1499  sudo systemctl restart leaderboard
+ 1500  sudo systemctl status leaderboard
+ 1501  sudo systemctl status nginx
+ 1502  systemctl start nginx
+ 1503  sudo systemctl status nginx
+ 1504  sudo journalctl -u leaderboard.service -f
+ 1505  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1506  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1507  sudo systemctl reload nginx
+ 1508  systemctl start nginx
+ 1509  sudo systemctl status nginx
+ 1510  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1511  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1512  Test#VpS-().&@?'#,/;+31
+ 1513  sudo ss -tulpn | grep -E "4000|5000|80"
+ 1514  sudo systemctl status nginx
+ 1515  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1516  sudo systemctl status nginx
+ 1517  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1518  cd /ubuntu
+ 1519  cd /home/ubuntu/E-learning/Backend/
+ 1520  ls
+ 1521  git pull
+ 1522  sudo systemctl restart backend
+ 1523  sudo systemctl restart leaderboard
+ 1524  sudo systemctl restart nginx
+ 1525  sudo systemctl status nginx
+ 1526  sudo nano /etc/systemd/system/leaderboard.service
+ 1527  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1528  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1529  sudo ss -tulpn | grep -E "4000|5000|80"
+ 1530  # Reset UFW to be safe (removes old rules)
+ 1531  sudo ufw reset
+ 1532  # Allow SSH (so you don’t lock yourself out)
+ 1533  sudo ufw allow 22/tcp
+ 1534  # Deny everything else
+ 1535  sudo ufw default deny incoming
+ 1536  sudo ufw default allow outgoing
+ 1537  # Enable the firewall
+ 1538  sudo ufw enable
+ 1539  # Check status
+ 1540  sudo ufw status verbose
+ 1541  restart
+ 1542  reboot
+ 1543  sudo systemctl status ssh
+ 1544  df
+ 1545  sudo systemctl start ssh
+ 1546  sudo systemctl enable ssh
+ 1547  sudo ufw allow 22/tcp
+ 1548  sudo ufw reload
+ 1549  sudo ufw status
+ 1550  cd /etc
+ 1551  ls
+ 1552  cdservices
+ 1553  cd services
+ 1554  cd /services
+ 1555  cd default
+ 1556  ls
+ 1557  cd ../
+ 1558  history
+ 1559  sudo nano /etc/systemd/system/backend.service
+ 1560  sudo systemctl disable backend
+ 1561  sudo systemctl stop backend
+ 1562  sudo npm install -g pm2
+ 1563  cd /home/ubuntu/E-learning/Backend
+ 1564  # Start app in cluster mode (all CPU cores)
+ 1565  pm2 start index.js -i max --name backend
+ 1566  # Save startup config
+ 1567  pm2 startup systemd
+ 1568  pm2 save
+ 1569  pm2 monit
+ 1570  sudo locale-gen en_US.UTF-8
+ 1571  sudo update-locale LANG=en_US.UTF-8
+ 1572  export LANG=en_US.UTF-8
+ 1573  export LC_ALL=en_US.UTF-8
+ 1574  pm2 restart backend
+ 1575  pm2 monit
+ 1576  sudo ss -tulpn | grep -E "4000|5000|80"
+ 1577  nanlo /etc/nginx/sites-available/mynodeapp.conf
+ 1578  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1579  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1580  nano /etc/nginx/sites-available/mynodeapp.conf
+ 1581  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1582  sudo nginx -t
+ 1583  sudo systemctl reload nginx
+ 1584  sudo ss -tulpn | grep -E "4000|5000|80"
+ 1585  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1586  nano /etc/nginx/nginx.conf
+ 1587  cat /etc/nginx/nginx.conf
+ 1588  sudo nano /etc/nginx/conf.d/default.conf
+ 1589  sudo nginx -t
+ 1590  sudo systemctl reload nginx
+ 1591  sudo ss -tulpn | grep :80
+ 1592  sudo systemctl restart nginx
+ 1593  sudo ss -tulpn | grep :80
+ 1594  sudo ss -tulpn | grep -E "4000|5000|80"
+ 1595  sudo ss -tulpn | grep -E "4000|5000|80"
+ 1596  sudo ufw deny 80/tcp
+ 1597  sudo nano /etc/sysctl.conf
+ 1598  pm2 monit
+ 1599  pm2 monit
+ 1600  top
+ 1601  htop
+ 1602  pm2 monit
+ 1603  htop
+ 1604  pm2 monit
+ 1605  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1606  htop
+ 1607  cat /etc/nginx/sites-available/mynodeapp.conf
+ 1608  sudo nano /etc/nginx/conf.d/default.conf
+ 1609  sudo cat /etc/nginx/conf.d/default.conf
+ 1610  history
+
+
+ root@srv808364:/home/ubuntu/E-learning/Backend# cat .env
+REDIS_PASSWORD=c7S5VNKkiKhHFVl3frJFUao4PXyEc0vbKVT36VYWvKc=
+#Backend env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=ssfdfsdffsfsf@gmail.com
+SMTP_PASS= odlc zupw xivy wfar
+MONGO_DB=mongodb://127.0.0.1:27017/CyberAnzen
+#Backend env
+#NODE_ENV="DEV"
+BASE_URL = "http://localhost:4000";
+#FRONTEND_URL =https://cyberanzen.netlify.app
+CF_SECRET_KEY=0x4AAAAAABxyJXTvAGUQflsloTA8gwhejGI
+
+# cache configuration
+CACHE_REFRESH_INTERVAL= 60  * 1000 # 12 hours in milliseconds
+
+#time window for replay atacks
+TIMESTAMP_WINDOW= 2* 60 * 1000 # 5 minutes in milliseconds
+
+
+#Secret Keys
+ACCESS_SECRET=j9zGVB3I9k5t82wvFLNRWvonPkbsHSlT1dxkKQobfQg=
+REFRESH_SECRET=SlDZzSrxdvbTcXRkedfKsYyEE0dNOgzmIF5on6gA3xI=
+
+
+NODE_ENV="production"
+
+#CTF
+Flag_Attemtps=5
+
+#leaderboard
+LEADERBOARD_KEY = "ctf:leaderboard" # sorted set
+TEAM_META_KEY = "ctf:team:meta"     # hash for extra data
+root@srv808364:/home/ubuntu/E-learning/Backend#
+
+
+root@srv808364:/home/ubuntu/E-learning/Backend# cd ../
+root@srv808364:/home/ubuntu/E-learning# cd Frontend
+root@srv808364:/home/ubuntu/E-learning/Frontend# cat .env
+
+VITE_BACKEND_URL = "https://api.cyberanzen.icu/api"
+VITE_BACKEND_URL_W = "https://api.cyberanzen.icu"
+VITE_CF_SITE_KEY= 0x4AAAAAABxyJat8gbxVnofX
+
+# VITE_BACKEND_URL = "http://localhost:4000/api"
+# VITE_BACKEND_URL_W = "http://localhost:4000"root@srv808364:/home/ubuntu/E-learning/Frontend#

@@ -94,7 +94,7 @@ const loginOnly = [
 router.post(
   "/signup",
   TimeStamp(2),
-  signupLimiter,
+  // signupLimiter,
   xssSanitizer(),
   // requireTurnstile, // verifies Turnstile token, calls next() on success
   userManager.signup
