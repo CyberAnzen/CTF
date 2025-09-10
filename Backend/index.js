@@ -300,5 +300,6 @@ server.listen(port, () => {
   console.log(`CTF platform running on http://127.0.0.1:${port}`);
 });
 
-process.on("SIGINT", () => gracefulShutdown(loggerWorker));
-process.on("SIGTERM", () => gracefulShutdown(loggerWorker));
+process.on("SIGINT", () => gracefulShutdown(server, loggerWorker));
+process.on("SIGTERM", () => gracefulShutdown(server, loggerWorker));
+
