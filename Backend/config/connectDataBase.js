@@ -8,14 +8,13 @@ const connectDataBase = async () => {
       "mongodb://127.0.0.1:27017/CyberAnzen?authSource=admin";
 
     await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 50, // increase pool size for high traffic
+      maxPoolSize: 20,   // lower per worker if using many cluster instances
       minPoolSize: 5,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      retryWrites: true, // safe writes
-      w: "majority", // majority write concern
+      retryWrites: true,
+      w: "majority",
+      autoIndex: false,  // ✅ prevents duplicate schema index warnings in cluster
     });
 
     console.log("✅ MongoDB connected & pool ready");
@@ -23,23 +22,18 @@ const connectDataBase = async () => {
     mongoose.connection.on("connected", () =>
       console.log("ℹ️ MongoDB connection established")
     );
-
     mongoose.connection.on("reconnected", () =>
       console.log("♻️ MongoDB reconnected")
     );
-
     mongoose.connection.on("disconnected", () =>
       console.warn("⚠️ MongoDB disconnected")
     );
-
     mongoose.connection.on("close", () =>
       console.warn("⚠️ MongoDB connection closed")
     );
-
     mongoose.connection.on("error", (err) =>
       console.error("❌ MongoDB connection error:", err)
     );
-
     mongoose.connection.on("timeout", () =>
       console.warn("⏱️ MongoDB socket timeout")
     );
