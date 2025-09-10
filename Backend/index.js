@@ -229,7 +229,7 @@ app.use("/v1/api/challenge", CTF);
 app.use("/v1/api/team", TeamRoutes);
 // CSRF route
 app.get(
-  "/api/auth/csrf-token",
+  "/v1/api/auth/csrf-token",
   Auth({ _CSRF: false }),
   csrfProtection,
   (req, res) => {
