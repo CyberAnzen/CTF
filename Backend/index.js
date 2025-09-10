@@ -223,13 +223,13 @@ app.use(
 // app.use("/api/event", event);
 
 // app.use("/api/event", xssSanitizer(), event);
-app.use("/v1/api/user", userRoutes);
-app.use("/v1/api/profile", profile);
-app.use("/v1/api/challenge", CTF);
-app.use("/v1/api/team", TeamRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/profile", profile);
+app.use("/api/challenge", CTF);
+app.use("/api/team", TeamRoutes);
 // CSRF route
 app.get(
-  "/v1/api/auth/csrf-token",
+  "/api/auth/csrf-token",
   Auth({ _CSRF: false }),
   csrfProtection,
   (req, res) => {
