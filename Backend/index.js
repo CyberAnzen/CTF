@@ -14,7 +14,7 @@ const http = require("http");
 const deasync = require("deasync");
 const mongoSanitize = require("express-mongo-sanitize");
 const ConnectDataBase = require("./config/connectDataBase");
-// const { connectRedis } = require("./redis/config/connectRedis");
+const { connectRedis } = require("./redis/config/connectRedis");
 const initializeCaches = require("./cache/initCache");
 //const initLeaderboard = require("./redis/initLeaderboard");
 //const LeaderboardManager = require("./controller/CTF/LeaderBoard/leaderBoardManager");
@@ -31,7 +31,7 @@ async function initializeServer() {
       Make sure to start Redis server before running the application.
       if u dont want to use redis, comment the line below
     */
-    // await connectRedis();
+    await connectRedis();
     // attach leaderboard websocket to same HTTP server
 
     //await initLeaderboard(); // Initialize leaderboard from MongoDB
