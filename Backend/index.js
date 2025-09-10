@@ -279,15 +279,15 @@ app.use(errorLogger(logInBackground));
 //   console.log(`CTF platform running on port ${port}`);
 // });
 
-let cachesDone = false;
-initializeCaches()
-  .then(() => {
-    cachesDone = true;
-  })
-  .catch((err) => {
-    throw err;
-  });
-deasync.loopWhile(() => !cachesDone);
+// let cachesDone = false;
+// initializeCaches()
+//   .then(() => {
+//     cachesDone = true;
+//   })
+//   .catch((err) => {
+//     throw err;
+//   });
+// deasync.loopWhile(() => !cachesDone);
 app.use((err, req, res, next) => {
   console.error("❌ Express error:", err);
   res.status(500).json({
