@@ -79,6 +79,12 @@ deasync.loopWhile(() => !initDone);
 // Logger worker setup
 const loggerWorker = new Worker("./logger/controller/logger.js");
 const logInBackground = createLogWorker(loggerWorker);
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  if (req.body) console.log('Body:', req.body);
+  next();
+});
 
 // app.use(
 //   cors({
