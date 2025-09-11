@@ -268,8 +268,10 @@ CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
   }
 
   // 2) normalize flags
-  const submittedFlag = String(Flag).trim();
-  const correctFlag = String(challenge.flag).trim();
+  const submittedFlag = String(Flag).trim().normalize("NFKC");
+  const correctFlag = String(challenge.flag || "")
+    .trim()
+    .normalize("NFKC");
 
   // 3) get existing progress (this method assumes progress already exists)
   const progress = await this.findOne({ userId, challengeId });

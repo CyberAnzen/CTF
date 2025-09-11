@@ -396,8 +396,10 @@ CTFTeamSchema.statics.validateFlag = async function (
   if (!challenge)
     return { updated: false, created: false, correct: false, Challenge: false };
 
-  const submittedFlag = String(Flag).trim();
-  const correctFlag = String(challenge.flag).trim();
+  const submittedFlag = String(Flag).trim().normalize("NFKC");
+  const correctFlag = String(challenge.flag || "")
+    .trim()
+    .normalize("NFKC");
 
   let progress = await model.findOne({ teamId, challengeId });
   let created = false;
