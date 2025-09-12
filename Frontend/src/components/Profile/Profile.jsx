@@ -28,16 +28,17 @@ function Profile() {
       case "Dashboard":
         // return <Dashboard />;
         return (
-          <div className="px-0 min-h-screen font-sans flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-[#00ffff] mb-4">
-                Dashboard
-              </h2>
-              <p className="text-[#00ffff]/60">
-                Dashboard section coming soon...
-              </p>
-            </div>
-          </div>
+          // <div className="px-0 min-h-screen font-sans flex items-center justify-center">
+          //   <div className="text-center">
+          //     <h2 className="text-2xl font-bold text-[#00ffff] mb-4">
+          //       Dashboard
+          //     </h2>
+          //     <p className="text-[#00ffff]/60">
+          //       Dashboard section coming soon...
+          //     </p>
+          //   </div>
+          // </div>
+          <Dashboard />
         );
       case "User Profile":
         return <ProfileSettings />;
@@ -85,7 +86,7 @@ function Profile() {
           </div>
         );
       default:
-        return <ProfileSettings />;
+        return <Dashboard />;
     }
   };
 
