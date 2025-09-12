@@ -3,6 +3,7 @@ const { Schema } = mongoose;
 const Flag_attempt = Number(process.env.Flag_Attemtps) || 5;
 const CTF_challenges = require("./CTFchallengeModel");
 const CTF_LeaderBoardSchema = require("./CTF_LeaderBoardModel");
+const moment = require("moment-timezone");
 
 const CTFprogress = new Schema(
   {
@@ -363,6 +364,55 @@ CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
     created: false,
     correct: false,
     Challenge: updatedDoc,
+  };
+};
+
+CTFprogress.statics.getProgress = async function (userId) {
+  const progresses = await this.find({ userId }).lean();
+
+  const result = [];
+  let completedCount = 0;
+
+  for (const prog of progresses) {
+    const challenge = await CTF_challenges.findById(prog.challengeId).lean();
+    if (!challenge) continue;
+
+    const totalHints = Array.isArray(challenge.hints)
+      ? challenge.hints.length
+      : 0;
+    const unlockedHints = Array.isArray(prog.hints)
+      ? prog.hints.filter((h) => h.used).length
+      : 0;
+
+    let completionTime = null;
+    if (prog.Flag_Submitted) {
+      completedCount++;
+      completionTime = moment(prog.updatedAt)
+        .tz("Asia/Kolkata")
+        .format("YYYY-MM-DD HH:mm:ss");
+    }
+
+    result.push({
+      ...prog,
+      title: challenge.title,
+      description: challenge.description,
+      category: challenge.category,
+      difficulty: challenge.difficulty,
+      tags: challenge.tags || [],
+      challengeNumber: challenge.challengeNumber,
+      totalHints,
+      unlockedHints,
+      completionTime,
+    });
+  }
+
+  // ✅ use total challenges count from DB
+  const totalChallenges = await CTF_challenges.countDocuments();
+
+  return {
+    totalChallenges,
+    completedChallenges: completedCount,
+    challenges: result,
   };
 };
 

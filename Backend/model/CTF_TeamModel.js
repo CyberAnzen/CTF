@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
+const moment = require("moment-timezone");
 const { Schema } = mongoose;
 const Flag_attempt = Number(process.env.Flag_Attempts) || 5;
+const Users = require("./UserModel"); // adjust path
 const CTF_challenges = require("./CTFchallengeModel");
 const CTF_LeaderBoard = require("./CTF_LeaderBoardModel"); // adjust path if needed
 const CTFTeamSchema = new Schema(
@@ -508,6 +510,101 @@ CTFTeamSchema.statics.validateFlag = async function (
       Challenge: updatedDoc,
     };
   }
+};
+
+CTFTeamSchema.statics.getProgress = async function (teamId) {
+  const model = this;
+  const progresses = await model
+    .find({ teamId })
+    .populate("submittedBy", "username")
+    .populate("hints.usedBy", "username")
+    .lean();
+
+  const result = [];
+  let completedCount = 0;
+  const userStats = {};
+
+  for (const prog of progresses) {
+    const challenge = await CTF_challenges.findById(prog.challengeId).lean();
+    if (!challenge) continue;
+
+    const totalHints = Array.isArray(challenge.hints)
+      ? challenge.hints.length
+      : 0;
+    const unlockedHints = Array.isArray(prog.hints)
+      ? prog.hints.filter((h) => h.used).length
+      : 0;
+
+    let completionTime = null;
+    if (prog.Flag_Submitted) {
+      completedCount++;
+      completionTime = moment(prog.updatedAt)
+        .tz("Asia/Kolkata")
+        .format("YYYY-MM-DD HH:mm:ss");
+
+      if (prog.submittedBy) {
+        const uname = prog.submittedBy.username;
+        userStats[uname] = userStats[uname] || { score: 0, flags: 0, hints: 0 };
+        userStats[uname].flags += 1;
+        userStats[uname].score += challenge.score || 0;
+      }
+    }
+
+    if (Array.isArray(prog.hints)) {
+      for (const h of prog.hints) {
+        if (h.used && h.usedBy) {
+          const uname = h.usedBy.username;
+          userStats[uname] = userStats[uname] || {
+            score: 0,
+            flags: 0,
+            hints: 0,
+          };
+          userStats[uname].hints += 1;
+
+          const hintMeta = Array.isArray(challenge.hints)
+            ? challenge.hints.find((ch) => String(ch._id) === String(h.hintId))
+            : null;
+          const hintCost =
+            hintMeta && typeof hintMeta.cost === "number" ? hintMeta.cost : 0;
+          userStats[uname].score -= hintCost;
+        }
+      }
+    }
+
+    result.push({
+      ...prog,
+      submittedBy: prog.submittedBy ? prog.submittedBy.username : null,
+      title: challenge.title,
+      description: challenge.description,
+      category: challenge.category,
+      difficulty: challenge.difficulty,
+      tags: challenge.tags || [],
+      challengeNumber: challenge.challengeNumber,
+      totalHints,
+      unlockedHints,
+      completionTime,
+    });
+  }
+
+  const ranking = Object.entries(userStats)
+    .map(([username, stats]) => ({
+      username,
+      flags: stats.flags,
+      hints: stats.hints,
+      score: stats.score,
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  // ✅ use total challenge count from DB instead of progresses length
+  const totalChallenges = await CTF_challenges.countDocuments();
+
+  return {
+    totalChallenges,
+    completedChallenges: completedCount,
+    challenges: result,
+    contributions: userStats,
+    ranking,
+  };
 };
 
 module.exports = mongoose.model("CTF_Teamprogress", CTFTeamSchema);
