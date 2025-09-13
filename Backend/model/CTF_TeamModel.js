@@ -394,15 +394,66 @@ CTFTeamSchema.statics.validateFlag = async function (
   submittedBy = null
 ) {
   const model = this;
+
+  // ---------------------------
+  // Helper: canonicalize a flag
+  // - normalize (NFKC) to unify composed chars
+  // - strip zero-width characters (common sneaky issue)
+  // - trim surrounding whitespace
+  // ---------------------------
+  const canonicalize = (v) =>
+    String(v === undefined || v === null ? "" : v)
+      .normalize("NFKC")
+      .replace(/[\u200B-\u200D\uFEFF]/g, "") // remove zero-width & BOM
+      .trim();
+
+  // ---------------------------
+  // Defensive: ensure Flag_attempt is usable
+  // If Flag_attempt isn't a finite number, fall back to Infinity.
+  // This avoids strange comparisons like >= undefined.
+  // ---------------------------
+  const MAX_ATTEMPTS =
+    Number.isFinite(Number(Flag_attempt)) && Number(Flag_attempt) >= 0
+      ? Number(Flag_attempt)
+      : Infinity;
+  if (!Number.isFinite(Number(Flag_attempt))) {
+    console.warn(
+      "Warning: Flag_attempt is not a finite number. Using unlimited attempts. Define Flag_attempt to enable attempt limiting."
+    );
+  }
+
+  // ---------------------------
+  // Load challenge document
+  // ---------------------------
   const challenge = await CTF_challenges.findById(challengeId).lean();
   if (!challenge)
     return { updated: false, created: false, correct: false, Challenge: false };
 
-  const submittedFlag = String(Flag).trim().normalize("NFKC");
-  const correctFlag = String(challenge.flag || "")
-    .trim()
-    .normalize("NFKC");
+  // ---------------------------
+  // Canonicalize both submitted and stored flags
+  // (option: uncomment .toLowerCase() lines below to make comparison case-insensitive)
+  // ---------------------------
+  let submittedFlag = canonicalize(Flag);
+  let correctFlag = canonicalize(challenge.flag || "");
 
+  // If your CTF uses case-insensitive flags, uncomment these lines:
+  // submittedFlag = submittedFlag.toLowerCase();
+  // correctFlag = correctFlag.toLowerCase();
+
+  // Debug helper: log raw + canonical values when DEBUG is enabled.
+  // Use an env var or remove later.
+  if (process.env.DEBUG_FLAGS) {
+    console.log("Flag debug:", {
+      rawSubmitted: Flag,
+      rawStored: challenge.flag,
+      submittedFlag,
+      correctFlag,
+    });
+  }
+
+  // ---------------------------
+  // Find or create progress entry for this team+challenge
+  // ---------------------------
   let progress = await model.findOne({ teamId, challengeId });
   let created = false;
   if (!progress) {
@@ -424,7 +475,10 @@ CTFTeamSchema.statics.validateFlag = async function (
     );
   }
 
-  if (progress.Flag_Submitted || (progress.attempt || 0) >= Flag_attempt) {
+  // ---------------------------
+  // Early return if already solved or attempts exhausted
+  // ---------------------------
+  if (progress.Flag_Submitted || (progress.attempt || 0) >= MAX_ATTEMPTS) {
     return {
       updated: false,
       created,
@@ -437,7 +491,11 @@ CTFTeamSchema.statics.validateFlag = async function (
     };
   }
 
+  // ---------------------------
+  // Compare canonicalized flags
+  // ---------------------------
   if (submittedFlag === correctFlag) {
+    // correct — mark solved
     const updatedDoc = await model
       .findOneAndUpdate(
         { _id: progress._id },
@@ -453,6 +511,9 @@ CTFTeamSchema.statics.validateFlag = async function (
       .populate("hints.usedBy", "username")
       .lean();
 
+    // ---------------------------
+    // Update leaderboard safely (best-effort)
+    // ---------------------------
     try {
       const Teams = mongoose.modelNames().includes("Teams")
         ? mongoose.model("Teams")
@@ -494,6 +555,23 @@ CTFTeamSchema.statics.validateFlag = async function (
       Challenge: updatedDoc,
     };
   } else {
+    // incorrect — increment attempt and return
+    // helpful debug: print char codes so you can spot invisible chars
+    if (process.env.DEBUG_FLAGS) {
+      const codes = (s) =>
+        [...s]
+          .map((c) => c.charCodeAt(0).toString(16).padStart(4, "0"))
+          .join(" ");
+      console.warn(
+        "Flag mismatch:",
+        { submittedFlag, correctFlag },
+        "\nsubmitted codes:",
+        codes(submittedFlag),
+        "\ncorrect codes:",
+        codes(correctFlag)
+      );
+    }
+
     const updatedDoc = await model
       .findOneAndUpdate(
         { _id: progress._id },
