@@ -39,6 +39,7 @@ import DisplayChallenge from "./routes/CTF/DisplayChallenge";
 import Leaderboard from "./routes/CTF/LeaderBoard";
 import ScrollToTop from "./components/ScrollTop";
 import Logout from "./routes/logout";
+
 function App() {
   const { loggedIn } = useAppContext();
   // const getCsrfToken = useGetCsrfToken();
@@ -49,6 +50,7 @@ function App() {
   const navigate = useNavigate();
   // Check if the current route is NOT in the noFooterRoutes list
   const showFooter = !noFooterRoutes.includes(location.pathname);
+
   useEffect(() => {
     // Block scrolling while the intro is active
     document.body.style.overflow = "hidden";
@@ -63,6 +65,15 @@ function App() {
       document.body.style.overflow = "";
     };
   }, []);
+
+  // ✅ Google Analytics 4 pageview tracking
+  useEffect(() => {
+    if (window.gtag) {
+      window.gtag("config", "G-LPPNYGH5J2", {
+        page_path: location.pathname + location.search,
+      });
+    }
+  }, [location]);
 
   return (
     <>

@@ -13,7 +13,7 @@ export default function RecentActivity({ challenges }) {
           type: 'flag',
           icon: CheckCircle2,
           color: 'text-green-400',
-          message: `${challenge.submittedBy || 'Someone'} completed "${challenge.title}"`,
+          message: `Completed "${challenge.title}" Challenge`,
           time: challenge.completionTime || challenge.updatedAt
         };
       } else if (challenge.unlockedHints > 0) {
