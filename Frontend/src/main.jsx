@@ -6,6 +6,7 @@ import { AppContextProvider } from "./context/AppContext.jsx";
 import { SocketProvider } from "./context/useSocket";
 import FaultyTerminal from "./components/Background.jsx";
 import { useState, useEffect } from "react";
+import("../utils/disable.js"); // the file above
 
 function Root() {
   const [animationsEnabled, setAnimationsEnabled] = useState(() => {
