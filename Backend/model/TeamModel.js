@@ -167,8 +167,8 @@ const TeamSchema = new Schema(
           message: "Team must have at least 1 member.",
         },
         {
-          validator: (v) => v.length <= 5,
-          message: "Team members cannot exceed 5.",
+          validator: (v) => v.length <= 4,
+          message: "Team members cannot exceed 4.",
         },
         {
           validator: (v) =>
@@ -584,7 +584,7 @@ TeamSchema.statics.acceptInvite = async function (
     teamCode: teamCode,
     "invites.code": inviteCode,
     "invites.memberId": userObjId,
-    $expr: { $lt: [{ $size: "$teamMembers" }, 5] }, // ensure team has space
+    $expr: { $lt: [{ $size: "$teamMembers" }, 4] }, // ensure team has space
   };
 
   const updatedTeam = await Team.findOneAndUpdate(
@@ -600,8 +600,8 @@ TeamSchema.statics.acceptInvite = async function (
     // race, team full, or type mismatch — give diagnostic
     // check if team full
     const teamDoc = await Team.findOne({ teamCode }).lean();
-    if (teamDoc && (teamDoc.teamMembers || []).length >= 5) {
-      throw new Error("Team is full (maximum 5 members).");
+    if (teamDoc && (teamDoc.teamMembers || []).length >= 4) {
+      throw new Error("Team is full (maximum 4 members).");
     }
     console.log(
       "Atomic update failed: invite may have been removed or memberId type mismatch."
