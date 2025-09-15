@@ -3,6 +3,7 @@ const { Schema } = mongoose;
 const Flag_attempt = Number(process.env.Flag_Attemtps) || 5;
 const CTF_challenges = require("./CTFchallengeModel");
 const CTF_LeaderBoardSchema = require("./CTF_LeaderBoardModel");
+const moment = require("moment-timezone");
 
 const CTFprogress = new Schema(
   {
@@ -261,6 +262,21 @@ CTFprogress.statics.fetchProgress = async function (userId, challengeId) {
 };
 
 CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
+  const model = this;
+
+  // Helper: canonicalize a flag
+  const canonicalize = (v) =>
+    String(v ?? "")
+      .normalize("NFKC")
+      .replace(/[\u200B-\u200D\uFEFF]/g, "") // strip zero-width & BOM
+      .trim();
+
+  // Defensive: handle Flag_attempt
+  const MAX_ATTEMPTS =
+    Number.isFinite(Number(Flag_attempt)) && Number(Flag_attempt) >= 0
+      ? Number(Flag_attempt)
+      : Infinity;
+
   // 1) fetch challenge
   const challenge = await CTF_challenges.findById(challengeId).lean();
   if (!challenge) {
@@ -268,21 +284,50 @@ CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
   }
 
   // 2) normalize flags
-  const submittedFlag = String(Flag).trim();
-  const correctFlag = String(challenge.flag).trim();
+  let submittedFlag = canonicalize(Flag);
+  let correctFlag = canonicalize(challenge.flag);
 
-  // 3) get existing progress (this method assumes progress already exists)
-  const progress = await this.findOne({ userId, challengeId });
+  // Uncomment below if your flags are case-insensitive
+  // submittedFlag = submittedFlag.toLowerCase();
+  // correctFlag = correctFlag.toLowerCase();
+
+  if (process.env.DEBUG_FLAGS) {
+    console.log("Flag check", {
+      rawSubmitted: Flag,
+      rawStored: challenge.flag,
+      submittedFlag,
+      correctFlag,
+    });
+  }
+
+  // 3) get existing progress (create if not exists)
+  let progress = await model.findOne({ userId, challengeId });
+  let created = false;
   if (!progress) {
-    return { updated: false, created: false, correct: false, Challenge: false };
+    created = true;
+    const initialHints = Array.isArray(challenge.hints)
+      ? challenge.hints.map((h) => ({ hintId: h._id, used: false }))
+      : [];
+    progress = await model.findOneAndUpdate(
+      { userId, challengeId },
+      {
+        $setOnInsert: {
+          score: challenge.score || 0,
+          Flag_Submitted: false,
+          hints: initialHints,
+          attempt: 0,
+        },
+      },
+      { new: true, upsert: true }
+    );
   }
 
   // 4) attempts / already submitted guard
-  if ((progress.attempt || 0) >= Flag_attempt || progress.Flag_Submitted) {
-    const locked = await this.findById(progress._id).lean();
+  if ((progress.attempt || 0) >= MAX_ATTEMPTS || progress.Flag_Submitted) {
+    const locked = await model.findById(progress._id).lean();
     return {
       updated: false,
-      created: false,
+      created,
       correct: false,
       Challenge: locked,
     };
@@ -290,22 +335,24 @@ CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
 
   // 5) correct flag path
   if (submittedFlag === correctFlag) {
-    const updatedDoc = await this.findOneAndUpdate(
-      { _id: progress._id },
-      { $set: { Flag_Submitted: true }, $inc: { attempt: 1 } }, // remove $inc if you don't want to count correct attempts
-      { new: true }
-    ).lean();
+    const updatedDoc = await model
+      .findOneAndUpdate(
+        { _id: progress._id },
+        {
+          $set: { Flag_Submitted: true },
+          $inc: { attempt: 1 }, // count correct attempts too
+        },
+        { new: true }
+      )
+      .lean();
 
-    // 6) leaderboard update (best-effort; never throw)
+    // 6) leaderboard update (safe)
     try {
-      // resolve a display name for the user if the Users model is registered
       let identifierName = "";
       let UsersModel = null;
       try {
         UsersModel = mongoose.model("Users");
-      } catch (_) {
-        UsersModel = null; // not registered; skip name resolution
-      }
+      } catch (_) {}
       if (UsersModel) {
         const u = await UsersModel.findById(userId)
           .select("username name email")
@@ -314,7 +361,6 @@ CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
         identifierName = u ? u.username || u.name || u.email || "" : "";
       }
 
-      // prefer the required model; fall back to registry if needed
       const LB =
         typeof CTF_LeaderBoard !== "undefined" &&
         CTF_LeaderBoard &&
@@ -326,16 +372,14 @@ CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
 
       if (LB) {
         await LB.updateScore(
-          userId, // identifierId
-          false, // isTeam
+          userId,
+          false, // isTeam = false
           progress.score || 0,
           challengeId,
           identifierName
         );
       } else {
-        console.warn(
-          "Leaderboard model not available; skipping leaderboard update."
-        );
+        console.warn("Leaderboard model not available; skipping update.");
       }
     } catch (err) {
       console.error("Leaderboard update error (user):", err);
@@ -343,24 +387,75 @@ CTFprogress.statics.validateFlag = async function (userId, challengeId, Flag) {
 
     return {
       updated: true,
-      created: false,
+      created,
       correct: true,
       Challenge: updatedDoc,
     };
   }
 
   // 7) wrong flag path
-  const updatedDoc = await this.findOneAndUpdate(
-    { _id: progress._id },
-    { $inc: { attempt: 1 } },
-    { new: true }
-  ).lean();
+  const updatedDoc = await model
+    .findOneAndUpdate(
+      { _id: progress._id },
+      { $inc: { attempt: 1 } },
+      { new: true }
+    )
+    .lean();
 
   return {
     updated: true,
-    created: false,
+    created,
     correct: false,
     Challenge: updatedDoc,
+  };
+};
+
+CTFprogress.statics.getProgress = async function (userId) {
+  const progresses = await this.find({ userId }).lean();
+
+  const result = [];
+  let completedCount = 0;
+
+  for (const prog of progresses) {
+    const challenge = await CTF_challenges.findById(prog.challengeId).lean();
+    if (!challenge) continue;
+
+    const totalHints = Array.isArray(challenge.hints)
+      ? challenge.hints.length
+      : 0;
+    const unlockedHints = Array.isArray(prog.hints)
+      ? prog.hints.filter((h) => h.used).length
+      : 0;
+
+    let completionTime = null;
+    if (prog.Flag_Submitted) {
+      completedCount++;
+      completionTime = moment(prog.updatedAt)
+        .tz("Asia/Kolkata")
+        .format("YYYY-MM-DD HH:mm:ss");
+    }
+
+    result.push({
+      ...prog,
+      title: challenge.title,
+      description: challenge.description,
+      category: challenge.category,
+      difficulty: challenge.difficulty,
+      tags: challenge.tags || [],
+      challengeNumber: challenge.challengeNumber,
+      totalHints,
+      unlockedHints,
+      completionTime,
+    });
+  }
+
+  // ✅ use total challenges count from DB
+  const totalChallenges = await CTF_challenges.countDocuments();
+
+  return {
+    totalChallenges,
+    completedChallenges: completedCount,
+    challenges: result,
   };
 };
 

@@ -20,7 +20,7 @@ export const AppContextProvider = ({ children }) => {
   const [classificationId, setClassificationId] = useState();
   const [fp, setFp] = useState(null);
   const [csrf, setCSRF] = useState(null);
-
+  const [progress, setProgress] = useState(null);
   // Generate fingerprint once
   const getFingerprint = async () => {
     if (fp) return fp;
@@ -133,6 +133,42 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
+  const fetchProgress = async () => {
+    const fingerprint = await getFingerprint();
+    const csrfToken = await getCsrf();
+    if (!fingerprint || !csrfToken) return null;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/challenge/progress`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "x-client-fp": fingerprint,
+          "x-csrf-token": csrfToken,
+          timestamp: Date.now(),
+        },
+      });
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          setProgress(null);
+          return null;
+        }
+        throw new Error("Failed to fetch progress");
+      }
+
+      const data = await res.json();
+      setProgress(data?.progress || null);
+      return data?.progress || null;
+    } catch (error) {
+      console.error("Progress fetch failed:", error);
+      setProgress(null);
+      return null;
+    }
+  };
+
   const logout = async () => {
     try {
       await fetch(`${BACKEND_URL}/user/logout`, {
@@ -156,6 +192,7 @@ export const AppContextProvider = ({ children }) => {
     const init = async () => {
       await fetchProfile();
       await fetchTeam();
+      await fetchProgress();
     };
     init();
   }, []);
@@ -184,6 +221,8 @@ export const AppContextProvider = ({ children }) => {
     fetchTeam,
     ChallengesData,
     setChallengesData,
+    progress,
+    fetchProgress,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
