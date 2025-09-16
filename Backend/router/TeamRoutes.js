@@ -21,16 +21,21 @@ router.get(
   require("../controller/CTF/Challenges/User/Team/getteamDetails")
     .getTeamDetails
 );
-router.post("/createTeam",
+router.get(
+  "/description/:teamId",
+  Auth(),
+  require("../controller/CTF/Challenges/User/Team/getTeamDescription")
+    .getTeamDescription
+);
+router.post(
+  "/createTeam",
   //xssSanitizer(),
-  Auth(), createTeam);
+  Auth(),
+  createTeam
+);
 // router.patch("/updateMembers", Auth(), updateMembers);
-router.delete("/deleteTeam", 
-  xssSanitizer(),
-  Auth(), deleteTeam);
-router.post("/generateInvite",
-  xssSanitizer(),
-  Auth(), generateInvite);
+router.delete("/deleteTeam", xssSanitizer(), Auth(), deleteTeam);
+router.post("/generateInvite", xssSanitizer(), Auth(), generateInvite);
 router.post(
   "/revokeInvite",
   xssSanitizer(),

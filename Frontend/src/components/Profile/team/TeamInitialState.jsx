@@ -142,7 +142,7 @@ export default function TeamInitialState() {
         <div className="flex bg-black/30 p-1 rounded-lg mb-6">
           <button
             onClick={() => setActiveTab("join")}
-            className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md transition-all duration-300 ${
+            className={` flex-1 flex items-center justify-center py-3 px-4 rounded-md transition-all duration-300 ${
               activeTab === "join"
                 ? "bg-[#00ffff]/10 text-[#00ffff] shadow-sm"
                 : "text-[#00ffff]/60 hover:text-[#00ffff]/80"
@@ -230,7 +230,7 @@ export default function TeamInitialState() {
                   !formData.teamCode.trim() ||
                   !formData.inviteCode.trim()
                 }
-                className="w-full bg-gradient-to-r from-[#00bfff] to-[#1e90ff] text-white py-3 px-6 rounded-lg font-medium hover:from-[#00bfff]/90 hover:to-[#1e90ff]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                className="cyber-button w-full py-3 px-6 rounded-lgbg-[#01ffdb]/10 border border-[#01ffdb]/50 text-[#01ffdb] rounded-lg hover:bg-[#01ffdb]/20 transition-all"
               >
                 {inviteLoading ? "Joining..." : "Join Team"}
               </button>
@@ -299,7 +299,7 @@ export default function TeamInitialState() {
               <button
                 type="submit"
                 disabled={createTeamLoading || !formData.teamName.trim()}
-                className="w-full bg-gradient-to-r from-[#00bfff] to-[#1e90ff] text-white py-3 px-6 rounded-lg font-medium hover:from-[#00bfff]/90 hover:to-[#1e90ff]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                className="cyber-button w-full py-3 px-6 rounded-lgbg-[#01ffdb]/10 border border-[#01ffdb]/50 text-[#01ffdb] rounded-lg hover:bg-[#01ffdb]/20 transition-all"
               >
                 {createTeamLoading ? "Creating..." : "Create Team"}
               </button>

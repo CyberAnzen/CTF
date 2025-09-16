@@ -39,6 +39,7 @@ import DisplayChallenge from "./routes/CTF/DisplayChallenge";
 import Leaderboard from "./routes/CTF/LeaderBoard";
 import ScrollToTop from "./components/ScrollTop";
 import Logout from "./routes/logout";
+import ProgressView from "./components/Challenges/ProgressView";
 
 function App() {
   const { loggedIn } = useAppContext();
@@ -114,6 +115,8 @@ function App() {
               />
             }
           />
+          <Route path="/public/info" element={<ProgressView />} />
+
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/login" element={<LoginPage />} />

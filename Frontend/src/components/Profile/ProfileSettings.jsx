@@ -1,9 +1,18 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { useAppContext } from "../../context/AppContext";
 import Usefetch from "../../hooks/Usefetch";
+import { AlertTriangle, Users, HelpCircle } from "lucide-react";
+import axios from "axios";
 
 export default function ProfileSettings() {
-  const { user } = useAppContext();
+  const { user, fetchProfile } = useAppContext();
+  console.log(user);
 
   const [formData, setFormData] = useState({
     fullName: user?.userDetails?.name || "",
@@ -14,6 +23,7 @@ export default function ProfileSettings() {
     dept: user?.userDetails?.dept || "",
     officialEmail: user?.officialEmail || "",
     gender: user?.userDetails?.gender || "",
+    userName: user?.userDetails?.userName || "", // <-- new field
   });
 
   // refs to hold the initial snapshot so we can compare for changes
@@ -32,6 +42,7 @@ export default function ProfileSettings() {
       dept: user?.userDetails?.dept || "",
       officialEmail: user?.officialEmail || "",
       gender: user?.userDetails?.gender || "",
+      userName: user?.username || "",
     };
     setFormData(initial);
 
@@ -48,10 +59,150 @@ export default function ProfileSettings() {
   const [validationErrors, setValidationErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [localError, setLocalError] = useState("");
   const [yearOpen, setYearOpen] = useState(false);
   const [sectionOpen, setSectionOpen] = useState(false);
   const [genderOpen, setGenderOpen] = useState(false);
+
+  // username status for availability checks
+  const [usernameStatus, setUsernameStatus] = useState(null); // {type: 'success'|'error', message: ''}
+
+  const fileInputRef = useRef();
+  const handleImageClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(URL.createObjectURL(file));
+    }
+  };
+
+  // Usefetch for updating profile (auto=false so we call retry manually)
+  const {
+    Data: updateResponse,
+    error: fetchError,
+    loading: updateLoading,
+    retry: postRetry,
+  } = Usefetch("profile/update", "post", null, {}, false);
+
+  // Keep a stable ref to postRetry so effects / handlers don't re-run if identity changes
+  const postRetryRef = useRef(postRetry);
+  useEffect(() => {
+    postRetryRef.current = postRetry;
+  }, [postRetry]);
+
+  // avoid updating state after unmount
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // helper to POST update via the hook
+  const SignupSubmit = async (data) => {
+    // prevent double submits
+    if (isLoading || updateLoading) return;
+
+    setIsLoading(true);
+    setLocalError("");
+    setUpdateStatus(null);
+
+    // Build payload: include username if present
+    const Payload = {
+      fullName: data.fullName,
+      section: data.section,
+      dept: data.dept,
+      gender: data.gender,
+      email: data.email,
+      regNumber: data.regNumber,
+      year: data.year,
+      userName: data.userName,
+    };
+
+    try {
+      // Use the retry function returned from Usefetch. It accepts (retryState, options)
+      // call the stable ref so we don't rely on changing identity in the closure
+      const retryFn = postRetryRef.current || postRetry;
+      if (!retryFn) {
+        // If hook didn't return a retry fn for some reason, fallback to axios as last resort
+        await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/profile/update`,
+          Payload,
+          { withCredentials: true }
+        );
+      } else {
+        await retryFn({}, { data: Payload });
+      }
+      // the hook should set updateResponse; we observe it in an effect below
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      setLocalError("Failed to update profile. Try again.");
+      setIsLoading(false);
+    }
+  };
+
+  // watch hook result and show feedback
+  const [updateStatus, setUpdateStatus] = useState(null); // { type: 'success'|'error', message }
+
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    if (updateResponse) {
+      // If backend reply structure is like { success: true, message: '', data: {...} }
+      const msg =
+        updateResponse?.message ||
+        updateResponse?.data?.message ||
+        "Profile updated successfully";
+      setUpdateStatus({ type: "success", message: msg });
+      setIsLoading(false);
+      // Refresh the profile from server (so UI shows latest user info)
+      if (fetchProfile) fetchProfile();
+
+      // reset initial snapshot so hasChanges becomes false after a successful update
+      initialFormRef.current = {
+        fullName: formData.fullName,
+        regNumber: formData.regNumber,
+        section: formData.section,
+        email: formData.email,
+        year: formData.year,
+        dept: formData.dept,
+        officialEmail: formData.officialEmail,
+        gender: formData.gender,
+        userName: formData.userName,
+      };
+      initialImageRef.current = image;
+
+      // clear usernameStatus after success (so it's not stuck)
+      setUsernameStatus(null);
+
+      // auto-dismiss success message after 4s
+      const t = setTimeout(() => {
+        if (!isMountedRef.current) return;
+        setUpdateStatus(null);
+      }, 4000);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateResponse]);
+
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    if (fetchError) {
+      // fetchError may be an object; try to read message gracefully
+      const message =
+        (fetchError && fetchError.message) ||
+        (typeof fetchError === "string" ? fetchError : "Update failed");
+      setUpdateStatus({
+        type: "error",
+        message,
+      });
+      setIsLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchError]);
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -66,47 +217,6 @@ export default function ProfileSettings() {
       if (validationErrors.currentPassword) {
         setValidationErrors((prev) => ({ ...prev, currentPassword: "" }));
       }
-    }
-  };
-
-  const fileInputRef = useRef();
-  const handleImageClick = () => {
-    fileInputRef.current.click();
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(URL.createObjectURL(file));
-    }
-  };
-
-  const { Data, loading, retry } = Usefetch(
-    "profile/update",
-    "post",
-    null,
-    {},
-    false
-  );
-
-  const SignupSubmit = async (data) => {
-    setIsLoading(true);
-    const Payload = {
-      fullName: data.fullName,
-      section: data.section,
-      dept: data.dept,
-      gender: data.gender,
-      email: data.email,
-      regNumber: data.regNumber,
-      year: data.year,
-    };
-    console.log(Payload);
-    try {
-      await retry({}, { data: Payload });
-    } catch (err) {
-      setError("Failed to update profile");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -153,6 +263,11 @@ export default function ProfileSettings() {
         setValidationErrors((prev) => ({ ...prev, gender: err }));
         break;
       }
+      case "userName": {
+        // run basic validation on blur too
+        validateUsername(formData.userName);
+        break;
+      }
       default:
         break;
     }
@@ -167,8 +282,14 @@ export default function ProfileSettings() {
     if (validationErrors[name]) {
       setValidationErrors((prev) => ({ ...prev, [name]: "" }));
     }
+
+    // If username changed, trigger validation (debounced check)
+    if (name === "userName") {
+      validateUsername(value);
+    }
   };
 
+  // ---------- Validators ----------
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) return "Email is required";
@@ -209,6 +330,7 @@ export default function ProfileSettings() {
     return "";
   };
 
+  // ---------- Form-level validation ----------
   const validateForm = () => {
     const newErrors = {};
     const fullNameErr = validateFullName(formData.fullName);
@@ -226,6 +348,11 @@ export default function ProfileSettings() {
     if (!formData.section) newErrors.section = "Section is required";
     if (!formData.year) newErrors.year = "Year is required";
     if (!formData.gender) newErrors.gender = "Gender is required";
+
+    // username status check (if user changed username)
+    if (formData.userName && usernameStatus?.type === "error") {
+      newErrors.userName = usernameStatus.message || "Username not available";
+    }
 
     setValidationErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -278,6 +405,7 @@ export default function ProfileSettings() {
       "dept",
       "officialEmail",
       "gender",
+      "userName",
     ];
     return keys.every((k) => (a[k] || "") === (b[k] || ""));
   };
@@ -298,6 +426,137 @@ export default function ProfileSettings() {
   const inputStyle =
     "w-full px-4 py-0 rounded-lg inset-0 h-10 rounded-full bg-gradient-to-r from-[#00bfff]/15 via-[#1e90ff]/10 to-[#00bfff]/5 border border-[#00bfff]/30 transition-all duration-300 text-white placeholder-[#00bfff]/30 outline-none focus:outline-none focus:ring-1 focus:ring-[#00bfff]";
 
+  // ---------------- Username availability check (debounced + cancellable) ----------------
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+  const debounceTimerRef = useRef(null);
+  const usernameAbortRef = useRef(null);
+
+  const debouncedCheckUsername = useCallback(
+    (username) => {
+      // clear previous timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      // cancel previous inflight username request
+      if (usernameAbortRef.current) {
+        try {
+          usernameAbortRef.current.abort();
+        } catch (e) {
+          // noop
+        }
+        usernameAbortRef.current = null;
+      }
+
+      // don't check empty usernames
+      if (!username || username.trim() === "") {
+        setUsernameStatus(null);
+        return;
+      }
+
+      // If username equals initial value, consider it available (no request)
+      if (
+        initialFormRef.current &&
+        initialFormRef.current.userName &&
+        initialFormRef.current.userName === username
+      ) {
+        setUsernameStatus({ type: "success", message: "Current username" });
+        return;
+      }
+
+      debounceTimerRef.current = setTimeout(async () => {
+        // create an AbortController so we can cancel if user keeps typing
+        const controller = new AbortController();
+        usernameAbortRef.current = controller;
+
+        try {
+          const response = await axios.get(
+            `${BACKEND_URL}/user/check-username?username=${encodeURIComponent(
+              username
+            )}`,
+            {
+              headers: {
+                timestamp: Date.now(),
+              },
+              withCredentials: true,
+              signal: controller.signal,
+            }
+          );
+
+          if (!isMountedRef.current) return;
+          setUsernameStatus({
+            type: response.data?.available ? "success" : "error",
+            message: response.data?.available
+              ? "Username is available"
+              : "Username is already taken",
+          });
+        } catch (error) {
+          if (!isMountedRef.current) return;
+          if (axios.isCancel && axios.isCancel(error)) {
+            // request cancelled — ignore
+            return;
+          }
+          // if aborted via AbortController signal, axios may throw DOMException; ignore
+          if (error?.name === "CanceledError" || error?.name === "AbortError")
+            return;
+
+          setUsernameStatus({
+            type: "error",
+            message: "Error checking username",
+          });
+        } finally {
+          usernameAbortRef.current = null;
+        }
+      }, 500);
+    },
+    [BACKEND_URL]
+  );
+
+  const validateUsername = (username) => {
+    if (!username || username.trim() === "") {
+      setUsernameStatus(null);
+      return;
+    }
+    if (username.length < 3) {
+      setUsernameStatus({
+        type: "error",
+        message: "Username must be at least 3 characters",
+      });
+      return;
+    }
+    if (username.length > 15) {
+      setUsernameStatus({
+        type: "error",
+        message: "Username must be less than 15 characters",
+      });
+      return;
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      setUsernameStatus({
+        type: "error",
+        message: "Username can only contain letters and numbers",
+      });
+      return;
+    }
+    // async availability check
+    debouncedCheckUsername(username);
+  };
+
+  // cleanup debounce and inflight username request on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (usernameAbortRef.current) {
+        try {
+          usernameAbortRef.current.abort();
+        } catch (e) {
+          // noop
+        }
+        usernameAbortRef.current = null;
+      }
+    };
+  }, []);
+
+  // ----------------- render -----------------
   return (
     <div className="px-0 min-h-screen font-sans">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -338,6 +597,7 @@ export default function ProfileSettings() {
                   </p>
                 )}
               </div>
+
               <div>
                 <input
                   type="text"
@@ -355,6 +615,7 @@ export default function ProfileSettings() {
                   </p>
                 )}
               </div>
+
               <div>
                 <input
                   type="text"
@@ -372,6 +633,40 @@ export default function ProfileSettings() {
                   </p>
                 )}
               </div>
+
+              {/* Username field */}
+              <div>
+                <input
+                  type="text"
+                  name="userName"
+                  placeholder="Username (3–15 chars, letters/numbers)"
+                  value={formData.userName}
+                  onChange={handleInputChange}
+                  onBlur={() => handleBlur("userName")}
+                  data-error={
+                    !!validationErrors.userName ||
+                    usernameStatus?.type === "error"
+                  }
+                  className={inputStyle}
+                />
+                {usernameStatus && (
+                  <p
+                    className={`text-xs mt-1 ${
+                      usernameStatus.type === "success"
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {usernameStatus.message}
+                  </p>
+                )}
+                {validationErrors.userName && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {validationErrors.userName}
+                  </p>
+                )}
+              </div>
+
               <div className="relative" data-error={!!validationErrors.gender}>
                 <button
                   type="button"
@@ -516,18 +811,44 @@ export default function ProfileSettings() {
             <div className="text-right space-x-2">
               <button
                 type="submit"
-                className="px-6 py-2 bg-gradient-to-r from-[#00bfff] to-[#1e90ff] text-white rounded-lg hover:from-[#00bfff]/90 hover:to-[#1e90ff]/90 transition-all duration-300 disabled:opacity-50"
+                className="px-6 py-2 rounded-lg
+               bg-[#01ffdb]/20 
+               text-[#01ffdb] font-medium
+               border border-[#01ffdb]/40
+               backdrop-blur-md
+               shadow-lg shadow-[#01ffdb]/10
+               hover:bg-[#01ffdb]/30
+               hover:border-[#01ffdb]/60
+               hover:shadow-[#01ffdb]/30
+               transition-all duration-300
+               disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={
-                  !isFormComplete() || isLoading || loading || !hasChanges
+                  !isFormComplete() || isLoading || updateLoading || !hasChanges
                 }
               >
-                {isLoading || loading ? "Submitting..." : "Submit"}
+                {isLoading || updateLoading ? "Updating..." : "Update"}
               </button>
             </div>
+
+            {/* updated status */}
+            {updateStatus && (
+              <div
+                className={`mt-3 text-sm ${
+                  updateStatus.type === "success"
+                    ? "text-green-300"
+                    : "text-red-300"
+                }`}
+              >
+                {updateStatus.message}
+              </div>
+            )}
+            {localError && (
+              <div className="mt-3 text-sm text-red-300">{localError}</div>
+            )}
           </form>
 
           {/* Password Info */}
-          <div className="bg-black/50 rounded-xl border text-[#00ffff]/25 p-6 space-y-4 shadow-sm blur-xs">
+          {/* <div className="bg-black/50 rounded-xl border text-[#00ffff]/25 p-6 space-y-4 shadow-sm blur-xs">
             <h2 className="text-lg text-[#00ffff] font-semibold">
               Password Information
             </h2>
@@ -564,110 +885,74 @@ export default function ProfileSettings() {
                 Save all
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Right Side (Profile + Settings) */}
-        {/* <div className="space-y-6 blur-xs"> */}
-        {/* Profile Card */}
-        {/* <div className="bg-black/50 rounded-xl border border-[#00ffff]/25 p-6 flex items-center space-x-4 shadow-sm">
-            <div className="avatar">
-              <div className="w-16 rounded-full">
-                <img src={image} alt="avatar" />
-              </div>
-            </div>
-            <div>
-              <h3 className="font-bold text-[#00ffff]">
-                {user?.userDetails?.name || "Cameron Williamson"}
-              </h3>
-              <p className="text-sm text-gray-500">Lead Product Design</p>
-
-              <label htmlFor="">
-                <input
-                  type="file"
-                  hidden
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-                <button
-                  onClick={handleImageClick}
-                  className="text-sm cursor-pointer text-[#00ffff]/30 hover:text-[#00ffff]"
-                >
-                  Change Avatar
-                </button>
-              </label>
-            </div>
-          </div> */}
-
-        {/* Language / Timezone */}
-        {/* <div className="bg-black/50 rounded-xl border border-[#00ffff]/25 p-6 space-y-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#00ffff]">
-              Language | Timezone
+        <div className="bg-black/50 rounded-xl border border-[#00ffff]/25 p-6 shadow-sm">
+          <div className="p-4 rounded-2xl">
+            <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-400" />
+              Competition Instructions
             </h2>
-            <select className={inputStyle}>
-              <option value="en-US">English (US)</option>
-              <option value="en-UK">English (UK)</option>
-              <option value="es">Spanish</option>
-            </select>
-            <select className={inputStyle}>
-              <option value="GMT+07:00">GMT+07:00</option>
-              <option value="GMT+05:30">GMT+05:30</option>
-              <option value="GMT+00:00">GMT+00:00</option>
-            </select>
-            <div className="flex justify-between">
-              <button className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
-                Cancel
-              </button>
-              <button className="px-6 py-2 bg-gradient-to-r from-[#00bfff] to-[#1e90ff] text-white rounded-lg hover:from-[#00bfff]/90 hover:to-[#1e90ff]/90 transition-all duration-300">
-                Save
-              </button>
-            </div>
-          </div> */}
 
-        {/* Team Accounts */}
-        {/* <div className="bg-black/50 rounded-xl border text-[#00ffff]/25 p-6 space-y-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#00ffff]">
-              Team Account
-            </h2>
-            <div className="flex justify-between items-center border text-[#00ffff]/30 rounded-lg px-4 py-2">
-              <div>
-                <p className="font-medium text-white ">Slack account</p>
-                <a
-                  className="text-sm text-[#00ffff]/30"
-                  href="https://www.slack.com"
-                >
-                  www.slack.com
-                </a>
+            <ul className="list-disc list-inside space-y-2 text-slate-300 text-sm leading-relaxed">
+              <li>
+                Do not share <strong className="text-white">flags</strong> with
+                anyone.
+              </li>
+              <li>
+                Do not update or leak your{" "}
+                <strong className="text-white">personal data</strong>.
+              </li>
+              <li>
+                Do not share <strong className="text-white">hints</strong>{" "}
+                publicly.
+              </li>
+              <li>
+                For teaming up, ask for{" "}
+                <strong className="text-white">instructions</strong> before
+                proceeding.
+              </li>
+              <li>
+                If you face any issue, reach out to{" "}
+                <strong className="text-white">our support team</strong>.
+              </li>
+              <li>
+                Do not forget your{" "}
+                <strong className="text-white">password</strong>. You cannot
+                change it yourself — contact organisers if required.
+              </li>
+              <li>
+                The event will{" "}
+                <strong className="text-white">
+                  end at the exact scheduled time
+                </strong>
+                , no extensions.
+              </li>
+              <li>
+                <strong className="text-white">Linux</strong> environment is
+                recommended for the CTF challenges.
+              </li>
+              <li>
+                We keep your data safe. Your{" "}
+                <strong className="text-white">personal data</strong> will only
+                be used for certificate generation.
+              </li>
+            </ul>
+
+            <div className="mt-3 space-y-1 text-xs text-slate-400">
+              <div className="flex items-center gap-1">
+                <Users className="w-3 h-3" /> Team collaboration is encouraged,
+                but stay fair.
               </div>
-              <button className="px-4 py-1 border border-red-500/30 text-red-400 rounded text-sm hover:border-red-500/50 hover:text-red-300 transition-colors">
-                Remove
-              </button>
-            </div>
-            <div className="flex justify-between items-center border text-[#00ffff]/30 rounded-lg px-4 py-2">
-              <div>
-                <p className="font-medium text-white">Trello account</p>
-                <a
-                  className="text-sm text-[#00ffff]/30"
-                  href="https://www.trello.com"
-                >
-                  www.trello.com
-                </a>
+              <div className="flex items-center gap-1">
+                <HelpCircle className="w-3 h-3" /> Contact support for any
+                disputes or doubts.
               </div>
-              <button className="px-4 py-1 border border-red-500/30 text-red-400 rounded text-sm hover:border-red-500/50 hover:text-red-300 transition-colors">
-                Remove
-              </button>
             </div>
-            <div className="flex justify-between">
-              <button className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
-                Cancel
-              </button>
-              <button className="px-6 py-2 bg-gradient-to-r from-[#00bfff] to-[#1e90ff] text-white rounded-lg hover:from-[#00bfff]/90 hover:to-[#1e90ff]/90 transition-all duration-300">
-                Save
-              </button>
-            </div>
-          </div> */}
-        {/* </div> */}
+          </div>
+        </div>
       </div>
     </div>
   );
