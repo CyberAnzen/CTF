@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Turnstile from "react-turnstile";
 import { User, Lock, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,6 +20,15 @@ export default function LoginPage() {
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const onContext = (e) => e.preventDefault();
+    el.addEventListener("contextmenu", onContext, true); // capture phase
+    return () => el.removeEventListener("contextmenu", onContext, true);
+  }, []);
 
   useEffect(() => {
     if (loggedIn || User) {
@@ -342,7 +351,10 @@ export default function LoginPage() {
                     </div>
 
                     {/* Captcha */}
-                    <div className="flex justify-center">
+                    <div
+                      className="flex justify-center"
+                      onContextMenu={(e) => e.preventDefault()}
+                    >
                       <div className="w-full max-w-sm">
                         <Turnstile
                           sitekey={import.meta.env.VITE_CF_SITE_KEY}

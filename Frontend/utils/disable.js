@@ -1,363 +1,117 @@
-// utils/devToolsBlocker.js
-import { useEffect } from "react";
+// entry.js (bundle this into production only)
+import disableDevtool from "disable-devtool";
 
-export const useDevToolsBlocker = (options = {}) => {
-  useEffect(() => {
-    // Track current zoom level (used if you want to scale thresholds)
-    let currentZoom = window.devicePixelRatio || 1;
+// initialize the package (basic)
+try {
+  disableDevtool({
+    disableMenu: true,
+    disableCopy: true,
+  });
+} catch (e) {
+  /* fail silently in dev */
+}
 
-    const {
-      disableMenu = true,
-      disableCopy = true,
-      onDevToolsOpen = defaultOnDevToolsOpen,
-      onDevToolsClose = () => {},
-      pollInterval = 500, // ms between checks (lower = more aggressive)
-      enforceInterval = 200, // ms enforcement loop while devtools is open
-      sendBeaconOnDetect = false, // optionally send repeated beacons
-      beaconUrl = "/api/devtools-detected",
-      redirectUrl = "https://www.youtube.com/watch?v=IxX_QHay02M", // default redirect target
-      immediateRedirect = true, // redirect immediately when detected
-    } = options;
+// 1) Block common keyboard shortcuts that open DevTools or view-source
+function blockDevShortcuts(e) {
+  // Common keys: F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+Shift+C, Ctrl+Shift+K (some browsers)
+  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+  const meta = isMac ? e.metaKey : e.ctrlKey;
 
-    // Default action when DevTools is detected: immediate redirect (no countdown)
-    function defaultOnDevToolsOpen() {
-      try {
-        // optional: create a tiny overlay to avoid a flash of original content,
-        // but we'll redirect immediately.
-        if (!document.getElementById("__devtools_overlay_manual")) {
-          const overlay = document.createElement("div");
-          overlay.id = "__devtools_overlay_manual";
-          overlay.style.position = "fixed";
-          overlay.style.inset = "0";
-          overlay.style.background = "rgba(0,0,0,0.98)";
-          overlay.style.color = "white";
-          overlay.style.zIndex = "2147483647";
-          overlay.style.display = "flex";
-          overlay.style.alignItems = "center";
-          overlay.style.justifyContent = "center";
-          overlay.style.textAlign = "center";
-          overlay.style.pointerEvents = "auto";
-          overlay.innerHTML = `<div style="padding:20px;font-family:sans-serif;">
-            <h1 style="color:#ff3333;margin:0 0 8px 0;font-size:20px">⚠️ Security Violation Detected</h1>
-            <p style="margin:0;font-size:14px;opacity:0.9">DevTools are open. Redirecting now...</p>
-          </div>`;
-          try {
-            document.documentElement.appendChild(overlay);
-            document.documentElement.style.overflow = "hidden";
-            document.body && (document.body.style.pointerEvents = "none");
-          } catch (e) {
-            // ignore DOM append errors (e.g., during early unload)
-          }
-        }
+  if (
+    e.key === "F12" ||
+    (meta &&
+      e.shiftKey &&
+      ["I", "J", "C", "K"].includes(e.key.toUpperCase())) ||
+    (meta && e.key.toUpperCase() === "U") ||
+    (meta && e.key.toUpperCase() === "S" && e.shiftKey) // sometimes used
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+}
+window.addEventListener("keydown", blockDevShortcuts, { capture: true });
 
-        // optional beacon once
-        if (sendBeaconOnDetect && navigator.sendBeacon) {
-          try {
-            navigator.sendBeacon(
-              beaconUrl,
-              JSON.stringify({ detectedAt: Date.now() })
-            );
-          } catch (e) {}
-        }
+// 2) Disable right-click / context menu
+window.addEventListener(
+  "contextmenu",
+  function (e) {
+    e.preventDefault();
+  },
+  { capture: true }
+);
 
-        // immediate navigation
-        try {
-          if (immediateRedirect) {
-            window.location.replace(redirectUrl);
-          } else {
-            // fallback: short delay, kept tiny
-            setTimeout(() => {
-              try {
-                window.location.replace(redirectUrl);
-              } catch (e) {
-                window.location.href = redirectUrl;
-              }
-            }, 200);
-          }
-        } catch (e) {
-          try {
-            window.location.href = redirectUrl;
-          } catch (err) {
-            // final fallback: do nothing
-          }
-        }
-      } catch (e) {
-        // fallback navigation
-        try {
-          window.location.replace(redirectUrl);
-        } catch (err) {
-          try {
-            window.location.href = redirectUrl;
-          } catch (ignore) {}
-        }
-      }
-    }
+// 3) Block selecting and copying (optional, because annoying to users)
+window.addEventListener(
+  "copy",
+  function (e) {
+    e.preventDefault();
+  },
+  { capture: true }
+);
+window.addEventListener(
+  "selectstart",
+  function (e) {
+    e.preventDefault();
+  },
+  { capture: true }
+);
 
-    // ------------------ helper: immediate trigger ------------------
-    let detectedTriggered = false;
-    function triggerDevToolsDetected() {
-      if (detectedTriggered) return;
-      detectedTriggered = true;
-      // mark devtoolsOpen so other flows don't re-trigger duplicate actions
-      try {
-        // call onDevToolsOpen once (default will redirect)
-        onDevToolsOpen();
-      } catch (e) {
-        // ignore
-      }
-      // ensure a final navigation if onDevToolsOpen didn't do it
-      if (immediateRedirect) {
-        try {
-          window.location.replace(redirectUrl);
-        } catch (e) {
-          try {
-            window.location.href = redirectUrl;
-          } catch (err) {}
-        }
-      } else {
-        // start overlay/enforcement if immediate redirect isn't desired
-        try {
-          // call startEnforcement indirectly by setting flags below; startPolling will pick up
-          // but to be safe we'll call ensureOverlay directly
-          ensureOverlay();
-        } catch (e) {}
-      }
-    }
+// 4) Detect DevTools open by measuring available viewport or using debugger trick.
+//    If detected, take an action (reload, redirect, show overlay).
+let devtoolsOpen = false;
+const threshold = 160; // px difference threshold
 
-    // ------------------ 1) Block common keyboard shortcuts ------------------
-    function blockDevShortcuts(e) {
-      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-      const meta = isMac ? e.metaKey : e.ctrlKey;
+function detectByResize() {
+  const widthDiff = window.outerWidth - window.innerWidth;
+  const heightDiff = window.outerHeight - window.innerHeight;
+  const open = widthDiff > threshold || heightDiff > threshold;
+  if (open && !devtoolsOpen) {
+    devtoolsOpen = true;
+    onDevtoolsOpen();
+  } else if (!open && devtoolsOpen) {
+    devtoolsOpen = false;
+    onDevtoolsClose();
+  }
+}
 
-      // Allow zoom shortcuts and common clipboard actions
-      if (meta && ["+", "=", "-", "0", "PageUp", "PageDown"].includes(e.key)) {
-        return;
-      }
-      if (meta && e.key.toLowerCase() === "a") return; // select all
-      if (meta && e.key.toLowerCase() === "c") return; // copy
-      if (meta && e.key.toLowerCase() === "v") return; // paste
-      if (meta && e.key.toLowerCase() === "x") return; // cut
+// additional detection: `debugger` timing trick
+function detectByDebugger() {
+  const start = Date.now();
+  // eslint-disable-next-line no-unused-vars
+  for (let i = 0; i < 100000; i++) {
+    // burn cycles
+  }
+  const delta = Date.now() - start;
+  // If paused by devtools we may get an unexpectedly large delta (heuristic)
+  if (delta > 200 && !devtoolsOpen) {
+    devtoolsOpen = true;
+    onDevtoolsOpen();
+  }
+}
 
-      const isDevShortcut =
-        e.key === "F12" ||
-        (meta &&
-          e.shiftKey &&
-          ["I", "J", "C", "K"].includes(e.key.toUpperCase())) ||
-        (meta && e.key.toUpperCase() === "U") ||
-        (meta && e.key.toUpperCase() === "S");
+function onDevtoolsOpen() {
+  // Reaction: blank the page, redirect, or logout user
+  try {
+    // example: destroy DOM and redirect
+    document.documentElement.innerHTML = "";
+    // optionally: send a beacon to server
+    navigator.sendBeacon && navigator.sendBeacon("/api/devtools-detected");
+    // hard redirect
+    window.location.replace("about:blank");
+  } catch (e) {
+    // fallback
+    window.location.reload();
+  }
+}
 
-      if (isDevShortcut) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Immediately trigger detection action (redirect/overlay)
-        triggerDevToolsDetected();
-        return false;
-      }
-    }
+function onDevtoolsClose() {
+  // no-op or you can force logout/refetch token
+}
 
-    // ------------------ 2) Context menu / copy handlers ------------------
-    function contextMenuHandler(e) {
-      if (disableMenu) {
-        e.preventDefault();
-        // Opening context menu might lead to inspect via menu — trigger immediate check
-        // Trigger detection only if right-clicking while devtools might be expected to open via menu
-        // We'll run a quick detection now
-        if (detectByResize() || detectByDebugger()) {
-          triggerDevToolsDetected();
-        }
-      }
-    }
-
-    function copyHandler(e) {
-      if (disableCopy) e.preventDefault();
-    }
-    function cutHandler(e) {
-      if (disableCopy) e.preventDefault();
-    }
-    function selectStartHandler(e) {
-      if (disableCopy) e.preventDefault();
-    }
-
-    // ------------------ 3) DevTools detection ------------------
-    let devtoolsOpen = false;
-    const threshold = 160;
-
-    function detectByResize() {
-      // Update zoom tracking occasionally
-      currentZoom = window.devicePixelRatio || 1;
-      const adjustedThreshold = threshold * currentZoom;
-
-      const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
-      const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
-
-      const open =
-        widthDiff > adjustedThreshold || heightDiff > adjustedThreshold;
-      return open;
-    }
-
-    function detectByDebugger() {
-      const start = Date.now();
-      // Use a small CPU work to detect long pauses
-      for (let i = 0; i < 100000; i++) {
-        Math.sqrt(i);
-      }
-      const delta = Date.now() - start;
-      return delta > 200; // heuristic: if this loop was paused, devtools likely open
-    }
-
-    // ------------------ 4) Enforcement while devtools is open ------------------
-    let enforcementTimer = null;
-    let pollTimer = null;
-    let lastOnOpenCalled = false;
-
-    function ensureOverlay() {
-      if (document.getElementById("__devtools_overlay")) return;
-      const overlay = document.createElement("div");
-      overlay.id = "__devtools_overlay";
-      overlay.style.position = "fixed";
-      overlay.style.inset = "0";
-      overlay.style.background = "rgba(0,0,0,0.97)";
-      overlay.style.color = "white";
-      overlay.style.zIndex = "2147483647"; // very high
-      overlay.style.display = "flex";
-      overlay.style.alignItems = "center";
-      overlay.style.justifyContent = "center";
-      overlay.style.textAlign = "center";
-      overlay.style.pointerEvents = "auto";
-      overlay.innerHTML = `<div style="padding:32px;font-family:sans-serif;">
-          <h1 style="color:#ff3333;margin:0 0 8px 0;font-size:28px">⚠️ Security Violation Detected</h1>
-          <p style="margin:0 0 12px 0">DevTools are open. Close DevTools to continue.</p>
-        </div>`;
-      try {
-        document.documentElement.appendChild(overlay);
-        document.documentElement.style.overflow = "hidden";
-        document.body && (document.body.style.pointerEvents = "none");
-      } catch (e) {
-        // ignore DOM errors
-      }
-    }
-
-    function removeOverlay() {
-      const overlay = document.getElementById("__devtools_overlay");
-      if (overlay) overlay.remove();
-      document.documentElement.style.overflow = "";
-      document.body && (document.body.style.pointerEvents = "");
-    }
-
-    function startEnforcement() {
-      if (enforcementTimer) return;
-      ensureOverlay();
-      if (!lastOnOpenCalled) {
-        try {
-          lastOnOpenCalled = true;
-          onDevToolsOpen();
-        } catch (e) {
-          // ignore
-        }
-      }
-      if (sendBeaconOnDetect && navigator.sendBeacon) {
-        try {
-          navigator.sendBeacon(
-            beaconUrl,
-            JSON.stringify({ detectedAt: Date.now() })
-          );
-        } catch (e) {}
-      }
-      enforcementTimer = setInterval(() => {
-        // keep overlay up and keep sending beacon (if enabled)
-        ensureOverlay();
-        if (sendBeaconOnDetect && navigator.sendBeacon) {
-          try {
-            navigator.sendBeacon(
-              beaconUrl,
-              JSON.stringify({ detectedAt: Date.now() })
-            );
-          } catch (e) {}
-        }
-      }, enforceInterval);
-    }
-
-    function stopEnforcement() {
-      if (!enforcementTimer) return;
-      clearInterval(enforcementTimer);
-      enforcementTimer = null;
-      lastOnOpenCalled = false;
-      removeOverlay();
-      try {
-        onDevToolsClose();
-      } catch (e) {}
-    }
-
-    // Aggressive poll loop: keeps checking and enforces overlay while open
-    function startPolling() {
-      if (pollTimer) return;
-      pollTimer = setInterval(() => {
-        const byResize = detectByResize();
-        const byDebug = detectByDebugger();
-        const open = byResize || byDebug;
-        if (open) {
-          // immediately trigger detection action (redirect/overlay)
-          triggerDevToolsDetected();
-          // ensure enforcement runs if immediateRedirect is false
-          if (!immediateRedirect) startEnforcement();
-        } else {
-          if (devtoolsOpen) {
-            devtoolsOpen = false;
-            stopEnforcement();
-          }
-        }
-      }, pollInterval);
-    }
-
-    function stopPolling() {
-      if (!pollTimer) return;
-      clearInterval(pollTimer);
-      pollTimer = null;
-    }
-
-    // ------------------ 5) Set up listeners and start ------------------
-    window.addEventListener("keydown", blockDevShortcuts, { capture: true });
-    window.addEventListener("contextmenu", contextMenuHandler, {
-      capture: true,
-    });
-    window.addEventListener("copy", copyHandler, { capture: true });
-    window.addEventListener("cut", cutHandler, { capture: true });
-    window.addEventListener("selectstart", selectStartHandler, {
-      capture: true,
-    });
-    window.addEventListener("resize", () => {
-      // immediate quick check on resize events
-      try {
-        const open = detectByResize();
-        if (open) {
-          // trigger immediate action
-          triggerDevToolsDetected();
-          if (!immediateRedirect) startEnforcement();
-        } else if (!open && devtoolsOpen) {
-          devtoolsOpen = false;
-          stopEnforcement();
-        }
-      } catch (e) {}
-    });
-
-    // Start polling
-    startPolling();
-
-    // ------------------ 6) Cleanup ------------------
-    return () => {
-      window.removeEventListener("keydown", blockDevShortcuts, {
-        capture: true,
-      });
-      window.removeEventListener("contextmenu", contextMenuHandler, {
-        capture: true,
-      });
-      window.removeEventListener("copy", copyHandler, { capture: true });
-      window.removeEventListener("cut", cutHandler, { capture: true });
-      window.removeEventListener("selectstart", selectStartHandler, {
-        capture: true,
-      });
-      stopPolling();
-      stopEnforcement();
-    };
-  }, [options]);
-};
+// poll & listen for resize
+window.addEventListener("resize", detectByResize);
+setInterval(() => {
+  detectByResize();
+  detectByDebugger();
+}, 1000);
