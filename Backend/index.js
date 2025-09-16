@@ -190,7 +190,7 @@ app.use(MongoSanitizer());
 
 // OR allow sanitization
 app.use(MongoSanitizer({ mode: "sanitize" })); // Serve only challenge files (not full public folder)
-app.use(
+/* app.use(
   "/public",
   // cors(staticCorsOptions), // <-- apply CORS middleware for /public
   // downloadLimiter,
@@ -220,7 +220,7 @@ app.use(
       );
     },
   })
-);
+); */
 // Routes
 // app.use("/api/classification", classification);
 // app.use("/api/lesson", lesson);
