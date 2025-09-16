@@ -656,6 +656,15 @@ function DisplayChallenge() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-teal-300 font-mono text-xs sm:text-sm">
+                      Challenge Made By:{" "}
+                      {display?.Author
+                        ? display.Author.charAt(0).toUpperCase() +
+                          display.Author.slice(1).toLowerCase()
+                        : "Easy"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-teal-300 font-mono text-xs sm:text-sm">
                       {display?.difficulty
                         ? display.difficulty.charAt(0).toUpperCase() +
                           display.difficulty.slice(1).toLowerCase()

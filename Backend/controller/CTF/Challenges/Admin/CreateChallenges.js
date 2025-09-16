@@ -2,9 +2,13 @@ const CTF_challenges = require("../../../../model/CTFchallengeModel");
 const customError = require("../../../../utilies/customError");
 const Path = require("path");
 const fs = require("fs");
+const { User } = require("../../../../model/UserModel");
 
 exports.CreateChallenges = async (req, res) => {
   try {
+    const userId = req.user.id;
+    const { name: Author } = await User.findById(userId).select("name").lean();
+
     const {
       title,
       description,
@@ -59,6 +63,7 @@ exports.CreateChallenges = async (req, res) => {
       attachments,
       flag,
       difficulty,
+      Author,
     };
     const Challenge = await CTF_challenges.create(payload);
     if (!Challenge) {
@@ -91,9 +96,11 @@ exports.CreateChallenges = async (req, res) => {
         error.message
       );
     }
-    if(process.env.NODE_ENV !== 'production') {
-      return res.status(500).json({ message:"Internal server error" ,error: error.message ,});
+    if (process.env.NODE_ENV !== "production") {
+      return res
+        .status(500)
+        .json({ message: "Internal server error", error: error.message });
     }
-    return res.status(400).json({ message: "Challenge Not Created"});
+    return res.status(400).json({ message: "Challenge Not Created" });
   }
 };

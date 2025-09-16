@@ -1,3 +1,4 @@
+// main.jsx
 import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import "./index.css";
@@ -6,8 +7,18 @@ import { AppContextProvider } from "./context/AppContext.jsx";
 import { SocketProvider } from "./context/useSocket";
 import FaultyTerminal from "./components/Background.jsx";
 import { useState, useEffect } from "react";
+import { useDevToolsBlocker } from "../utils/disable.js"; // keep your import as-is
 
 function Root() {
+  // Initialize the DevTools blocker INSIDE a React component (valid hook call)
+  useDevToolsBlocker({
+    disableMenu: true,
+    disableCopy: true,
+    onDevToolsOpen: () => {
+      console.log("DevTools detected!");
+    },
+  });
+
   const [animationsEnabled, setAnimationsEnabled] = useState(() => {
     const stored = localStorage.getItem("animationOff");
     if (stored === null) return true; // default ON
@@ -19,7 +30,6 @@ function Root() {
       setAnimationsEnabled(localStorage.getItem("animationOff") !== "true");
     };
 
-    // Listen for both localStorage (cross-tab) and custom app events (same tab)
     window.addEventListener("storage", syncStorage);
     window.addEventListener("animationToggle", syncStorage);
 

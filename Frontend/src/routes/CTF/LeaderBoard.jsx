@@ -2,11 +2,11 @@ import React, { useState, useMemo } from "react";
 import { Terminal, RefreshCw } from "lucide-react";
 import { useSocket } from "../../context/useSocket";
 import Radarcomponent from "../../components/Leaderboard/Radar";
+
 export default function Leaderboard() {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("score");
   const { leaderboardData, clientCount, isConnected, reconnect } = useSocket();
-  // console.log(leaderboardData, clientCount, isConnected, reconnect);
 
   // Transform data to match expected format
   const rows = useMemo(() => {
@@ -32,33 +32,38 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Right: Live Feed Panel */}
-        <div className="col-span-1 flex items-start justify-center">
-          <div className="w-full bg-gradient-to-b from-[rgba(255,255,255,0.02)] to-[rgba(255,255,255,0.01)] backdrop-blur-[8px] border border-[rgba(1,255,219,0.12)] shadow-[0_8px_30px_rgba(1,255,219,0.04)] rounded-2xl p-6 flex flex-col items-center justify-center min-h-[300px] md:min-h-[420px]">
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+        {/* Left: Live Feed Panel */}
+        <div className="col-span-1 flex items-center justify-center">
+          <div
+            className="
+              w-full max-w-[600px] h-[600px] 
+              bg-gradient-to-b from-[rgba(255,255,255,0.02)] to-[rgba(255,255,255,0.01)] 
+              backdrop-blur-[8px] border border-[rgba(1,255,219,0.12)] 
+              shadow-[0_8px_30px_rgba(1,255,219,0.04)] 
+              rounded-2xl p-6 
+              flex flex-col items-center justify-center
+              md:fixed md:top-1/2 md:left-1/4 md:-translate-x-1/2 md:-translate-y-1/2 md:z-10
+              md:mt-15
+              overflow-y-auto
+            "
+          >
             <div className="text-xl font-semibold text-[#01ffdb]">
               CTF Live Feed
             </div>
-            {/* <div className="text-[rgba(255,255,255,0.55)] text-center mt-2">
-              Half of this page reserved for live graph / match info
-            </div> */}
             <Radarcomponent clientCount={clientCount} />
           </div>
         </div>
 
-        {/* Left: Leaderboard */}
+        {/* Right: Leaderboard */}
         <div className="col-span-1 flex items-stretch">
           <div className="w-full bg-gradient-to-b from-[rgba(255,255,255,0.02)] to-[rgba(255,255,255,0.01)] backdrop-blur-[8px] border border-[rgba(1,255,219,0.12)] shadow-[0_8px_30px_rgba(1,255,219,0.04)] rounded-2xl p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4 md:gap-0">
               <div className="flex items-center gap-2">
-                <Terminal size={22} color="#01ffdb" />
                 <div>
                   <h2 className="text-2xl font-semibold text-[#01ffdb]">
                     CTF Leaderboard
                   </h2>
-                  {/* <div className="text-sm text-[rgba(255,255,255,0.55)]">
-                    Live standings · minimal glass UI
-                  </div> */}
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 items-stretch md:items-center w-full md:w-auto">
@@ -77,20 +82,6 @@ export default function Leaderboard() {
                   <option value="rank">Sort: Rank</option>
                   <option value="name">Sort: Name</option>
                 </select>
-                {/* <button
-                  onClick={reconnect}
-                  className={`px-3 py-2 border rounded-lg text-sm transition-all ${
-                    isConnected
-                      ? "border-[rgba(1,255,219,0.12)] text-[#01ffdb] hover:border-[rgba(1,255,219,0.24)]"
-                      : "border-red-400/30 text-red-400 hover:border-red-400/70"
-                  }`}
-                  title="Reconnect WebSocket"
-                >
-                  <RefreshCw
-                    size={16}
-                    className={isConnected ? "" : "animate-spin"}
-                  />
-                </button> */}
               </div>
             </div>
 
