@@ -23,6 +23,7 @@ const CTFchallenge = new Schema(
         cost: { type: Number },
       },
     ],
+    Author: { type: String , required: true},  
   },
   {
     timestamps: true,
