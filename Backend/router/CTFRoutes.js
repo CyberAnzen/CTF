@@ -34,14 +34,14 @@ const {
 } = require("../controller/CTF/Challenges/User/getProgress");
 
 //Admin Routes
-router.get(
+/* router.get(
   "/admin/:ChallengeId",
   xssSanitizer(),
   Auth({ requireAdmin: true }),
   getChallengeAdmin
-);
+); */
 
-router.post(
+/* router.post(
   "/admin/create",
   Auth({ requireAdmin: true }),
   dynamicFileUpload({
@@ -55,9 +55,9 @@ router.post(
   xssSanitizer(),
   randomPathName(Path.join("public", "CTF", "Challenges"), "title"),
   CreateChallenges
-);
+); */
 
-router.patch(
+/* router.patch(
   "/admin/update/:ChallengeId",
   xssSanitizer(),
   Auth({ requireAdmin: true }),
@@ -76,23 +76,23 @@ router.patch(
   ),
   updateChallenge
 );
-
-router.delete(
+ */
+/* router.delete(
   "/admin/delete/:ChallengeId",
   Auth({ requireAdmin: true }),
   xssSanitizer(),
   deleteChallenge
-);
+); */
 
 //User
 router.get("/", xssSanitizer(), getallChallenge);
 router.get("/progress", xssSanitizer(), Auth(), getProgress);
 router.get("/:ChallengeId", xssSanitizer(), Auth(), getChallenge);
 router.get("/:ChallengeId/hint/:hintId", xssSanitizer(), Auth(), getHint);
-router.post(
+/* router.post(
   "/:ChallengeId/validateFlag",
   xssSanitizer(),
   Auth(),
   require("../controller/CTF/Challenges/User/validateFlag").validateFlag
-);
+); */
 module.exports = router;
