@@ -29,6 +29,9 @@ const {
   deleteChallenge,
 } = require("../controller/CTF/Challenges/Admin/deleteChallenge");
 const { getHint } = require("../controller/CTF/Challenges/User/getHints");
+const {
+  getProgress,
+} = require("../controller/CTF/Challenges/User/getProgress");
 
 //Admin Routes
 router.get(
@@ -82,23 +85,10 @@ router.delete(
 );
 
 //User
-router.get(
-  "/",
-  // xssSanitizer(),
-  getallChallenge
-);
-router.get(
-  "/:ChallengeId",
-  // xssSanitizer(),
-  Auth(),
-  getChallenge
-);
-router.get(
-  "/:ChallengeId/hint/:hintId",
-  // xssSanitizer(),
-  Auth(),
-  getHint
-);
+router.get("/", xssSanitizer(), getallChallenge);
+router.get("/progress", xssSanitizer(), Auth(), getProgress);
+router.get("/:ChallengeId", xssSanitizer(), Auth(), getChallenge);
+router.get("/:ChallengeId/hint/:hintId", xssSanitizer(), Auth(), getHint);
 router.post(
   "/:ChallengeId/validateFlag",
   xssSanitizer(),

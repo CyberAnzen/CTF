@@ -38,7 +38,7 @@ export default function Sidebar({
   };
 
   const menuItems = [
-    // { name: "Dashboard", icon: <Home /> },
+    { name: "Dashboard", icon: <Home /> },
     { name: "User Profile", icon: <User /> },
     { name: "Team", icon: <Users /> },
     // { name: "Documents", icon: <FileText /> },
