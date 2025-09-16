@@ -31,6 +31,8 @@ const {
 const { getHint } = require("../controller/CTF/Challenges/User/getHints");
 const {
   getProgress,
+  getProgressByTeamId,
+  getProgressByUserId,
 } = require("../controller/CTF/Challenges/User/getProgress");
 
 //Admin Routes
@@ -87,6 +89,11 @@ router.delete(
 //User
 router.get("/", xssSanitizer(), getallChallenge);
 router.get("/progress", xssSanitizer(), Auth(), getProgress);
+// progress by userId (direct param)
+router.get("/progress/user/:userId", getProgressByUserId);
+
+// progress by teamId (direct param)
+router.get("/progress/team/:teamId", getProgressByTeamId);
 router.get("/:ChallengeId", xssSanitizer(), Auth(), getChallenge);
 router.get("/:ChallengeId/hint/:hintId", xssSanitizer(), Auth(), getHint);
 router.post(

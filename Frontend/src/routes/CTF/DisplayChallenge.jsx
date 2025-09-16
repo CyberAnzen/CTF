@@ -225,6 +225,72 @@ function DisplayChallenge() {
       setFlagSubmissionSuccess("");
     }
   }, [flagError]);
+  // put this inside your DisplayChallenge component (near other useEffects)
+  const copyCutAttemptsRef = useRef(0);
+
+  useEffect(() => {
+    const isEditable = (el) => {
+      if (!el) return false;
+      const tag = (el.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea") return true;
+      if (el.isContentEditable) return true;
+      // also check ancestors
+      let p = el;
+      while (p) {
+        if (p.isContentEditable) return true;
+        p = p.parentElement;
+      }
+      return false;
+    };
+
+    const incrementAndMaybeRedirect = () => {
+      copyCutAttemptsRef.current += 1;
+      if (copyCutAttemptsRef.current > 3) {
+        window.location.href =
+          "https://www.youtube-nocookie.com/embed/IxX_QHay02M?autoplay=1&rel=0&modestbranding=1&start=5&loop=1&playlist=IxX_QHay02M";
+      }
+    };
+
+    const blockCopyCut = (e) => {
+      // allow normal behavior inside inputs/contenteditable
+      if (isEditable(e.target)) return;
+
+      try {
+        e.preventDefault();
+        // replace clipboard content with useless text
+        if (e.clipboardData) {
+          e.clipboardData.setData("text/plain", "Don't Use AI bruh!!! 😏");
+        } else if (window.clipboardData) {
+          window.clipboardData.setData("Text", "Don't Use AI bruh!!! 😏");
+        }
+      } catch (err) {
+        // ignore
+      }
+      incrementAndMaybeRedirect();
+    };
+
+    // also catch keyboard shortcuts (Ctrl/Cmd+C and Ctrl/Cmd+X)
+    const keydownHandler = (e) => {
+      const meta = e.ctrlKey || e.metaKey;
+      if (!meta) return;
+      const k = (e.key || "").toLowerCase();
+      if (k === "c" || k === "x") {
+        if (isEditable(document.activeElement)) return;
+        e.preventDefault();
+        incrementAndMaybeRedirect();
+      }
+    };
+
+    document.addEventListener("copy", blockCopyCut, true);
+    document.addEventListener("cut", blockCopyCut, true);
+    document.addEventListener("keydown", keydownHandler, true);
+
+    return () => {
+      document.removeEventListener("copy", blockCopyCut, true);
+      document.removeEventListener("cut", blockCopyCut, true);
+      document.removeEventListener("keydown", keydownHandler, true);
+    };
+  }, []); // run once
 
   const handleCopy = (e) => {
     e.preventDefault();
@@ -660,7 +726,7 @@ function DisplayChallenge() {
                       {display?.Author
                         ? display.Author.charAt(0).toUpperCase() +
                           display.Author.slice(1).toLowerCase()
-                        : "Easy"}
+                        : "Anonymous"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -668,7 +734,7 @@ function DisplayChallenge() {
                       {display?.difficulty
                         ? display.difficulty.charAt(0).toUpperCase() +
                           display.difficulty.slice(1).toLowerCase()
-                        : "Easy"}
+                        : "He is Anonymous"}
                     </span>
                   </div>
                 </div>

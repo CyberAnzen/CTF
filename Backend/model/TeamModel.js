@@ -1053,10 +1053,21 @@ TeamSchema.statics.removeMember = async function (teamId, leaderId, memberId) {
 
 TeamSchema.statics.getallProgress = async (teamId) => {
   try {
-    const progresses = this.findById(teamId);
+    const progresses = await this.findById(teamId);
     if (!progresses) {
       throw new Error("Team not found");
     }
   } catch (error) {}
+};
+TeamSchema.statics.getDescriptions = async function (teamId) {
+  try {
+    const team = await this.findById(teamId).select("description teamName").lean();
+    if (!team) {
+      throw new Error("Team not found");
+    }
+    return team; // Return just the description field
+  } catch (error) {
+    throw error;
+  }
 };
 module.exports = mongoose.model("Teams", TeamSchema);

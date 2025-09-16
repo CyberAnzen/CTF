@@ -25,6 +25,7 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = React.useRef(null);
   const reconnectTimerRef = React.useRef(null);
+  console.log(leaderboardData);
 
   const connect = useCallback(() => {
     if (wsRef.current) {
