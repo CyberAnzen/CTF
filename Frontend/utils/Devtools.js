@@ -15,7 +15,7 @@ export const useDevToolsBlocker = (options = {}) => {
       enforceInterval = 200, // ms enforcement loop while devtools is open
       sendBeaconOnDetect = false, // optionally send repeated beacons
       beaconUrl = "/api/devtools-detected",
-      redirectUrl = "https://www.youtube.com/watch?v=IxX_QHay02M", // default redirect target
+      redirectUrl = "https://www.youtube-nocookie.com/embed/IxX_QHay02M?autoplay=1&rel=0&modestbranding=1&start=5&loop=1&playlist=IxX_QHay02M",
       immediateRedirect = true, // redirect immediately when detected
     } = options;
 
