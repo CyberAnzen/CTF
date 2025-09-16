@@ -11,6 +11,7 @@ import {
   UserCircle,
   Terminal,
   Code2,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppContext } from "../../context/AppContext";
@@ -450,6 +451,7 @@ const Navbar = () => {
     loggedIn
       ? { name: "Profile", icon: UserCircle, path: "/profile" }
       : { name: "Login", icon: User, path: "/login" },
+    { name: "About", icon: Info, path: "/about" },
   ];
 
   // Device-specific animation configurations
