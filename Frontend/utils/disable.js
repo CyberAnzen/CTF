@@ -1,177 +1,248 @@
-// utils/devToolsBlocker.js
-import { useEffect } from "react";
+// entry.js (bundle this into production only)
+import disableDevtool from "disable-devtool";
 
-export const useDevToolsBlocker = (options = {}) => {
-  useEffect(() => {
-    // Track current zoom level
-    let currentZoom = 1;
+// initialize the package (basic)
+try {
+  disableDevtool({
+    disableMenu: true,
+    disableCopy: true,
+  });
+} catch (e) {
+  /* fail silently in dev */
+}
 
-    const {
-      disableMenu = true,
-      disableCopy = true,
-      onDevToolsOpen = defaultOnDevToolsOpen,
-      onDevToolsClose = () => {},
-    } = options;
+/* =========================
+   Shortcuts / context / copy
+   ========================= */
 
-    // Default action when DevTools is detected
-    function defaultOnDevToolsOpen() {
-      try {
-        // Example: show warning and redirect after delay
-        document.body.innerHTML = `
-          <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: black; color: white; font-family: sans-serif;">
-            <div style="text-align: center;">
-              <h1 style="color: red; font-size: 3rem;">⚠️ Security Violation Detected</h1>
-              <p style="font-size: 1.5rem; margin-top: 20px;">DevTools usage is not permitted on this application.</p>
-              <p style="margin-top: 30px;">Redirecting in <span id="countdown">3</span> seconds...</p>
-            </div>
-          </div>
-        `;
+// // Block common DevTools shortcuts but allow zoom combos robustly
+// function blockDevShortcuts(e) {
+//   const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+//   const meta = isMac ? e.metaKey : e.ctrlKey;
 
-        // Countdown and redirect
-        let count = 3;
-        const countdownEl = document.getElementById("countdown");
-        const interval = setInterval(() => {
-          count--;
-          if (countdownEl) countdownEl.textContent = count;
-          if (count <= 0) {
-            clearInterval(interval);
-            window.location.replace("about:blank");
-          }
-        }, 1000);
-      } catch (e) {
-        // fallback
-        window.location.reload();
-      }
-    }
+//   // Let browser handle zoom combos (Ctrl/Cmd + + - 0, including numpad)
+//   if (meta) {
+//     const allowedZoomKeys = new Set(["+", "-", "=", "0", "Equal", "Minus"]);
+//     if (
+//       allowedZoomKeys.has(e.key) ||
+//       e.code === "NumpadAdd" ||
+//       e.code === "NumpadSubtract"
+//     ) {
+//       return; // allow zoom
+//     }
+//   }
 
-    // 1) Block common keyboard shortcuts
-    function blockDevShortcuts(e) {
-      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-      const meta = isMac ? e.metaKey : e.ctrlKey;
+//   // Block DevTools and view-source combos
+//   if (
+//     e.key === "F12" ||
+//     (meta &&
+//       e.shiftKey &&
+//       ["I", "J", "C", "K"].includes(e.key.toUpperCase())) ||
+//     (meta && e.key.toUpperCase() === "U") ||
+//     (meta && e.shiftKey && e.key.toUpperCase() === "S")
+//   ) {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     return false;
+//   }
+// }
+// window.addEventListener("keydown", blockDevShortcuts, { capture: true });
 
-      // Allow zoom shortcuts
-      if (meta && ["+", "=", "-", "0", "PageUp", "PageDown"].includes(e.key)) {
-        return;
-      }
+// // Disable right-click / context menu
+// window.addEventListener(
+//   "contextmenu",
+//   function (e) {
+//     e.preventDefault();
+//   },
+//   { capture: true }
+// );
 
-      // Allow Ctrl+A for select all
-      if (meta && e.key.toLowerCase() === "a") {
-        return;
-      }
+// // Block selecting and copying (optional — keep if you want it)
+// window.addEventListener(
+//   "copy",
+//   function (e) {
+//     e.preventDefault();
+//   },
+//   { capture: true }
+// );
+// window.addEventListener(
+//   "selectstart",
+//   function (e) {
+//     e.preventDefault();
+//   },
+//   { capture: true }
+// );
 
-      // Allow Ctrl+C for copy
-      if (meta && e.key.toLowerCase() === "c") {
-        return;
-      }
+// /* ===========================================
+//    DevTools detection with zoom-awareness + ignore
+//    =========================================== */
 
-      if (
-        e.key === "F12" ||
-        (meta &&
-          e.shiftKey &&
-          ["I", "J", "C", "K"].includes(e.key.toUpperCase())) ||
-        (meta && e.key.toUpperCase() === "U") ||
-        (meta && e.key.toUpperCase() === "S")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    }
+// let devtoolsOpen = false;
+// const threshold = 160; // px difference threshold for outer - inner dims
 
-    // 2) Disable right-click / context menu if enabled
-    function contextMenuHandler(e) {
-      if (disableMenu) {
-        e.preventDefault();
-      }
-    }
+// // Track initial devicePixelRatio so DPR changes (zoom) can be detected
+// const initialDevicePixelRatio = window.devicePixelRatio || 1;
 
-    // 3) Block copying if enabled
-    function copyHandler(e) {
-      if (disableCopy) {
-        e.preventDefault();
-      }
-    }
+// // A short ignore window used while user is actively zooming so detection won't fire
+// let ignoreUntil = 0;
+// function setIgnore(ms = 800) {
+//   ignoreUntil = Date.now() + ms;
+// }
 
-    function cutHandler(e) {
-      if (disableCopy) {
-        e.preventDefault();
-      }
-    }
+// // Detect whether user has zoomed (pinch/visualViewport scale or DPR change)
+// function isUserZoomed() {
+//   const vv = window.visualViewport;
+//   const scale = vv && typeof vv.scale === "number" ? vv.scale : 1;
+//   const dpr = window.devicePixelRatio || 1;
 
-    function selectStartHandler(e) {
-      if (disableCopy) {
-        e.preventDefault();
-      }
-    }
+//   const scaleZoom = typeof scale === "number" && Math.abs(scale - 1) > 0.02;
+//   const dprZoom = Math.abs(dpr - initialDevicePixelRatio) > 0.02;
 
-    // 4) Detect DevTools open
-    let devtoolsOpen = false;
-    const threshold = 160;
+//   return scaleZoom || dprZoom;
+// }
 
-    function detectByResize() {
-      const adjustedThreshold = threshold * currentZoom;
+// /* --- Mark ignore when user performs zoom actions --- */
 
-      const widthDiff = window.outerWidth - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
+// // Ctrl/Cmd + wheel (desktop zoom) -> set ignore
+// window.addEventListener(
+//   "wheel",
+//   (e) => {
+//     const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+//     const meta = isMac ? e.metaKey : e.ctrlKey;
+//     if (meta) {
+//       setIgnore(900); // ignore devtools heuristics briefly while zooming
+//       return;
+//     }
+//   },
+//   { passive: true, capture: true }
+// );
 
-      const open =
-        widthDiff > adjustedThreshold || heightDiff > adjustedThreshold;
+// // visualViewport pinch/resize (mobile pinch or zoom UI) -> set ignore
+// if (window.visualViewport) {
+//   window.visualViewport.addEventListener(
+//     "resize",
+//     () => {
+//       setIgnore(900);
+//     },
+//     { passive: true }
+//   );
+// } else {
+//   // fallback for browsers without visualViewport
+//   window.addEventListener(
+//     "resize",
+//     () => {
+//       setIgnore(900);
+//     },
+//     { passive: true }
+//   );
+//   window.addEventListener(
+//     "orientationchange",
+//     () => {
+//       setIgnore(900);
+//     },
+//     { passive: true }
+//   );
+// }
 
-      if (open && !devtoolsOpen) {
-        devtoolsOpen = true;
-        onDevToolsOpen();
-      } else if (!open && devtoolsOpen) {
-        devtoolsOpen = false;
-        onDevToolsClose();
-      }
-    }
+// // key-based zoom attempts (Ctrl/Cmd + + - 0) -> set ignore
+// window.addEventListener(
+//   "keydown",
+//   (e) => {
+//     const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+//     const meta = isMac ? e.metaKey : e.ctrlKey;
+//     if (!meta) return;
+//     const zoomKeyCandidates = new Set(["+", "=", "-", "0", "Equal", "Minus"]);
+//     if (
+//       zoomKeyCandidates.has(e.key) ||
+//       e.code === "NumpadAdd" ||
+//       e.code === "NumpadSubtract"
+//     ) {
+//       setIgnore(900);
+//       return;
+//     }
+//   },
+//   { capture: true }
+// );
 
-    // Additional detection: `debugger` timing trick
-    function detectByDebugger() {
-      const start = Date.now();
-      for (let i = 0; i < 100000; i++) {
-        Math.sqrt(i) * Math.sqrt(i);
-      }
-      const delta = Date.now() - start;
-      if (delta > 200 && !devtoolsOpen) {
-        devtoolsOpen = true;
-        onDevToolsOpen();
-      }
-    }
+// /* --- Core detection (resize + debugger) --- */
 
-    // Set up event listeners
-    window.addEventListener("keydown", blockDevShortcuts, { capture: true });
-    window.addEventListener("contextmenu", contextMenuHandler, {
-      capture: true,
-    });
-    window.addEventListener("copy", copyHandler, { capture: true });
-    window.addEventListener("cut", cutHandler, { capture: true });
-    window.addEventListener("selectstart", selectStartHandler, {
-      capture: true,
-    });
-    window.addEventListener("resize", detectByResize);
+// function detectByResize() {
+//   // skip detection during recent zoom activity
+//   if (Date.now() < ignoreUntil) {
+//     if (devtoolsOpen) {
+//       devtoolsOpen = false;
+//       onDevtoolsClose();
+//     }
+//     return;
+//   }
 
-    // Poll for DevTools
-    const intervalId = setInterval(() => {
-      detectByResize();
-      detectByDebugger();
-    }, 1000);
+//   // skip detection if the user is zoomed (pinch or DPR change)
+//   if (isUserZoomed()) {
+//     if (devtoolsOpen) {
+//       devtoolsOpen = false;
+//       onDevtoolsClose();
+//     }
+//     return;
+//   }
 
-    // Cleanup function
-    return () => {
-      window.removeEventListener("keydown", blockDevShortcuts, {
-        capture: true,
-      });
-      window.removeEventListener("contextmenu", contextMenuHandler, {
-        capture: true,
-      });
-      window.removeEventListener("copy", copyHandler, { capture: true });
-      window.removeEventListener("cut", cutHandler, { capture: true });
-      window.removeEventListener("selectstart", selectStartHandler, {
-        capture: true,
-      });
-      window.removeEventListener("resize", detectByResize);
-      clearInterval(intervalId);
-    };
-  }, [options]);
-};
+//   // measure differences
+//   const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
+//   const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
+//   const open = widthDiff > threshold || heightDiff > threshold;
+
+//   if (open && !devtoolsOpen) {
+//     devtoolsOpen = true;
+//     onDevtoolsOpen();
+//   } else if (!open && devtoolsOpen) {
+//     devtoolsOpen = false;
+//     onDevtoolsClose();
+//   }
+// }
+
+// function detectByDebugger() {
+//   // skip if within ignore period or if user is zoomed
+//   if (Date.now() < ignoreUntil) return;
+//   if (isUserZoomed()) return;
+
+//   const start = Date.now();
+//   // burn cycles
+//   for (let i = 0; i < 100000; i++) {}
+//   const delta = Date.now() - start;
+
+//   // heuristic: paused or slowed by devtools -> large delta
+//   if (delta > 200 && !devtoolsOpen) {
+//     devtoolsOpen = true;
+//     onDevtoolsOpen();
+//   }
+// }
+
+// function onDevtoolsOpen() {
+//   // Reaction: blank the page, optionally report, then redirect
+//   try {
+//     document.documentElement.innerHTML = "";
+//     if (navigator.sendBeacon) {
+//       // best-effort reporting
+//       try {
+//         navigator.sendBeacon("/api/devtools-detected");
+//       } catch (err) {
+//         // ignore
+//       }
+//     }
+//     // final action
+//     window.location.replace("about:blank");
+//   } catch (e) {
+//     // fallback
+//     window.location.reload();
+//   }
+// }
+
+// function onDevtoolsClose() {
+//   // no-op for now (could re-auth or reload resources)
+// }
+
+// /* --- Start polling/listeners --- */
+// window.addEventListener("resize", detectByResize);
+// setInterval(() => {
+//   detectByResize();
+//   detectByDebugger();
+// }, 800);
