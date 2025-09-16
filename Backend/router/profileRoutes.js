@@ -9,13 +9,13 @@ const upload = fileUploader("temp/uploads/images",
 ) */
 
 const getProfile = require("../controller/user/profile/getProfile");
-const updateLink = require("../controller/user/profile/links/updateLink");
-const updateSkill = require("../controller/user/profile/skills/updateSkill");
+//const updateLink = require("../controller/user/profile/links/updateLink");
+//const updateSkill = require("../controller/user/profile/skills/updateSkill");
 const updateUserDetails = require("../controller/user/profile/updateUserDetails");
 //const createAvator = require("../controller/user/profile/avator/createAvator");
-const checkRegNo = require("../controller/user/profile/checkRegNo");
-const updateAvator = require("../controller/user/profile/avator/updateAvator");
-const getAllDefaultAvator = require("../controller/user/profile/avator/getAllDefaultAvator");
+//const checkRegNo = require("../controller/user/profile/checkRegNo");
+//const updateAvator = require("../controller/user/profile/avator/updateAvator");
+//const getAllDefaultAvator = require("../controller/user/profile/avator/getAllDefaultAvator");
 
 router.get("/data", Auth(), xssSanitizer(), getProfile);
 // router.post("/links", Auth(),xssSanitizer(),updateLink);
