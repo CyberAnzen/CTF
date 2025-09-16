@@ -1,117 +1,177 @@
-// entry.js (bundle this into production only)
-import disableDevtool from "disable-devtool";
+// utils/devToolsBlocker.js
+import { useEffect } from "react";
 
-// initialize the package (basic)
-try {
-  disableDevtool({
-    disableMenu: true,
-    disableCopy: true,
-  });
-} catch (e) {
-  /* fail silently in dev */
-}
+export const useDevToolsBlocker = (options = {}) => {
+  useEffect(() => {
+    // Track current zoom level
+    let currentZoom = 1;
 
-// 1) Block common keyboard shortcuts that open DevTools or view-source
-function blockDevShortcuts(e) {
-  // Common keys: F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+Shift+C, Ctrl+Shift+K (some browsers)
-  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-  const meta = isMac ? e.metaKey : e.ctrlKey;
+    const {
+      disableMenu = true,
+      disableCopy = true,
+      onDevToolsOpen = defaultOnDevToolsOpen,
+      onDevToolsClose = () => {},
+    } = options;
 
-  if (
-    e.key === "F12" ||
-    (meta &&
-      e.shiftKey &&
-      ["I", "J", "C", "K"].includes(e.key.toUpperCase())) ||
-    (meta && e.key.toUpperCase() === "U") ||
-    (meta && e.key.toUpperCase() === "S" && e.shiftKey) // sometimes used
-  ) {
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-  }
-}
-window.addEventListener("keydown", blockDevShortcuts, { capture: true });
+    // Default action when DevTools is detected
+    function defaultOnDevToolsOpen() {
+      try {
+        // Example: show warning and redirect after delay
+        document.body.innerHTML = `
+          <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: black; color: white; font-family: sans-serif;">
+            <div style="text-align: center;">
+              <h1 style="color: red; font-size: 3rem;">⚠️ Security Violation Detected</h1>
+              <p style="font-size: 1.5rem; margin-top: 20px;">DevTools usage is not permitted on this application.</p>
+              <p style="margin-top: 30px;">Redirecting in <span id="countdown">3</span> seconds...</p>
+            </div>
+          </div>
+        `;
 
-// 2) Disable right-click / context menu
-window.addEventListener(
-  "contextmenu",
-  function (e) {
-    e.preventDefault();
-  },
-  { capture: true }
-);
+        // Countdown and redirect
+        let count = 3;
+        const countdownEl = document.getElementById("countdown");
+        const interval = setInterval(() => {
+          count--;
+          if (countdownEl) countdownEl.textContent = count;
+          if (count <= 0) {
+            clearInterval(interval);
+            window.location.replace("about:blank");
+          }
+        }, 1000);
+      } catch (e) {
+        // fallback
+        window.location.reload();
+      }
+    }
 
-// 3) Block selecting and copying (optional, because annoying to users)
-window.addEventListener(
-  "copy",
-  function (e) {
-    e.preventDefault();
-  },
-  { capture: true }
-);
-window.addEventListener(
-  "selectstart",
-  function (e) {
-    e.preventDefault();
-  },
-  { capture: true }
-);
+    // 1) Block common keyboard shortcuts
+    function blockDevShortcuts(e) {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const meta = isMac ? e.metaKey : e.ctrlKey;
 
-// 4) Detect DevTools open by measuring available viewport or using debugger trick.
-//    If detected, take an action (reload, redirect, show overlay).
-let devtoolsOpen = false;
-const threshold = 160; // px difference threshold
+      // Allow zoom shortcuts
+      if (meta && ["+", "=", "-", "0", "PageUp", "PageDown"].includes(e.key)) {
+        return;
+      }
 
-function detectByResize() {
-  const widthDiff = window.outerWidth - window.innerWidth;
-  const heightDiff = window.outerHeight - window.innerHeight;
-  const open = widthDiff > threshold || heightDiff > threshold;
-  if (open && !devtoolsOpen) {
-    devtoolsOpen = true;
-    onDevtoolsOpen();
-  } else if (!open && devtoolsOpen) {
-    devtoolsOpen = false;
-    onDevtoolsClose();
-  }
-}
+      // Allow Ctrl+A for select all
+      if (meta && e.key.toLowerCase() === "a") {
+        return;
+      }
 
-// additional detection: `debugger` timing trick
-function detectByDebugger() {
-  const start = Date.now();
-  // eslint-disable-next-line no-unused-vars
-  for (let i = 0; i < 100000; i++) {
-    // burn cycles
-  }
-  const delta = Date.now() - start;
-  // If paused by devtools we may get an unexpectedly large delta (heuristic)
-  if (delta > 200 && !devtoolsOpen) {
-    devtoolsOpen = true;
-    onDevtoolsOpen();
-  }
-}
+      // Allow Ctrl+C for copy
+      if (meta && e.key.toLowerCase() === "c") {
+        return;
+      }
 
-function onDevtoolsOpen() {
-  // Reaction: blank the page, redirect, or logout user
-  try {
-    // example: destroy DOM and redirect
-    document.documentElement.innerHTML = "";
-    // optionally: send a beacon to server
-    navigator.sendBeacon && navigator.sendBeacon("/api/devtools-detected");
-    // hard redirect
-    window.location.replace("about:blank");
-  } catch (e) {
-    // fallback
-    window.location.reload();
-  }
-}
+      if (
+        e.key === "F12" ||
+        (meta &&
+          e.shiftKey &&
+          ["I", "J", "C", "K"].includes(e.key.toUpperCase())) ||
+        (meta && e.key.toUpperCase() === "U") ||
+        (meta && e.key.toUpperCase() === "S")
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
 
-function onDevtoolsClose() {
-  // no-op or you can force logout/refetch token
-}
+    // 2) Disable right-click / context menu if enabled
+    function contextMenuHandler(e) {
+      if (disableMenu) {
+        e.preventDefault();
+      }
+    }
 
-// poll & listen for resize
-window.addEventListener("resize", detectByResize);
-setInterval(() => {
-  detectByResize();
-  detectByDebugger();
-}, 1000);
+    // 3) Block copying if enabled
+    function copyHandler(e) {
+      if (disableCopy) {
+        e.preventDefault();
+      }
+    }
+
+    function cutHandler(e) {
+      if (disableCopy) {
+        e.preventDefault();
+      }
+    }
+
+    function selectStartHandler(e) {
+      if (disableCopy) {
+        e.preventDefault();
+      }
+    }
+
+    // 4) Detect DevTools open
+    let devtoolsOpen = false;
+    const threshold = 160;
+
+    function detectByResize() {
+      const adjustedThreshold = threshold * currentZoom;
+
+      const widthDiff = window.outerWidth - window.innerWidth;
+      const heightDiff = window.outerHeight - window.innerHeight;
+
+      const open =
+        widthDiff > adjustedThreshold || heightDiff > adjustedThreshold;
+
+      if (open && !devtoolsOpen) {
+        devtoolsOpen = true;
+        onDevToolsOpen();
+      } else if (!open && devtoolsOpen) {
+        devtoolsOpen = false;
+        onDevToolsClose();
+      }
+    }
+
+    // Additional detection: `debugger` timing trick
+    function detectByDebugger() {
+      const start = Date.now();
+      for (let i = 0; i < 100000; i++) {
+        Math.sqrt(i) * Math.sqrt(i);
+      }
+      const delta = Date.now() - start;
+      if (delta > 200 && !devtoolsOpen) {
+        devtoolsOpen = true;
+        onDevToolsOpen();
+      }
+    }
+
+    // Set up event listeners
+    window.addEventListener("keydown", blockDevShortcuts, { capture: true });
+    window.addEventListener("contextmenu", contextMenuHandler, {
+      capture: true,
+    });
+    window.addEventListener("copy", copyHandler, { capture: true });
+    window.addEventListener("cut", cutHandler, { capture: true });
+    window.addEventListener("selectstart", selectStartHandler, {
+      capture: true,
+    });
+    window.addEventListener("resize", detectByResize);
+
+    // Poll for DevTools
+    const intervalId = setInterval(() => {
+      detectByResize();
+      detectByDebugger();
+    }, 1000);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener("keydown", blockDevShortcuts, {
+        capture: true,
+      });
+      window.removeEventListener("contextmenu", contextMenuHandler, {
+        capture: true,
+      });
+      window.removeEventListener("copy", copyHandler, { capture: true });
+      window.removeEventListener("cut", cutHandler, { capture: true });
+      window.removeEventListener("selectstart", selectStartHandler, {
+        capture: true,
+      });
+      window.removeEventListener("resize", detectByResize);
+      clearInterval(intervalId);
+    };
+  }, [options]);
+};

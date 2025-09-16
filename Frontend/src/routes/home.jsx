@@ -9,6 +9,144 @@ import {
   Globe,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import TeamScroll from "../components/Home/TeamScroll";
+const teamMembers = [
+  {
+    id: "1",
+    name: "Sarah Johnson",
+    role: "Creative Director",
+    image: "https://images.pexels.com/photos/123123/pexels-photo-123123.jpeg",
+  },
+  {
+    id: "2",
+    name: "Michael Chen",
+    role: "Lead Developer",
+    image: "https://images.pexels.com/photos/456456/pexels-photo-456456.jpeg",
+  },
+  {
+    id: "3",
+    name: "Emily Rodriguez",
+    role: "UX Designer",
+    image: "https://images.pexels.com/photos/789789/pexels-photo-789789.jpeg",
+  },
+  {
+    id: "4",
+    name: "David Kim",
+    role: "Product Manager",
+    image: "https://images.pexels.com/photos/101010/pexels-photo-101010.jpeg",
+  },
+  {
+    id: "5",
+    name: "Lisa Thompson",
+    role: "Marketing Lead",
+    image: "https://images.pexels.com/photos/121212/pexels-photo-121212.jpeg",
+  },
+  {
+    id: "6",
+    name: "James Wilson",
+    role: "Data Scientist",
+    image: "https://images.pexels.com/photos/131313/pexels-photo-131313.jpeg",
+  },
+  {
+    id: "7",
+    name: "Olivia Brown",
+    role: "HR Manager",
+    image: "https://images.pexels.com/photos/141414/pexels-photo-141414.jpeg",
+  },
+  {
+    id: "8",
+    name: "Ethan Davis",
+    role: "Software Engineer",
+    image: "https://images.pexels.com/photos/151515/pexels-photo-151515.jpeg",
+  },
+  {
+    id: "9",
+    name: "Sophia Miller",
+    role: "Product Designer",
+    image: "https://images.pexels.com/photos/161616/pexels-photo-161616.jpeg",
+  },
+  {
+    id: "10",
+    name: "Jackson Moore",
+    role: "Content Strategist",
+    image: "https://images.pexels.com/photos/171717/pexels-photo-171717.jpeg",
+  },
+  {
+    id: "11",
+    name: "Ava Taylor",
+    role: "SEO Specialist",
+    image: "https://images.pexels.com/photos/181818/pexels-photo-181818.jpeg",
+  },
+  {
+    id: "12",
+    name: "Lucas Anderson",
+    role: "Backend Developer",
+    image: "https://images.pexels.com/photos/191919/pexels-photo-191919.jpeg",
+  },
+  {
+    id: "13",
+    name: "Mia Thomas",
+    role: "Frontend Developer",
+    image: "https://images.pexels.com/photos/202020/pexels-photo-202020.jpeg",
+  },
+  {
+    id: "14",
+    name: "Benjamin Jackson",
+    role: "Project Manager",
+    image: "https://images.pexels.com/photos/212121/pexels-photo-212121.jpeg",
+  },
+  {
+    id: "15",
+    name: "Charlotte White",
+    role: "Quality Assurance",
+    image: "https://images.pexels.com/photos/222222/pexels-photo-222222.jpeg",
+  },
+  {
+    id: "16",
+    name: "Amelia Harris",
+    role: "Business Analyst",
+    image: "https://images.pexels.com/photos/232323/pexels-photo-232323.jpeg",
+  },
+  {
+    id: "17",
+    name: "Henry Clark",
+    role: "DevOps Engineer",
+    image: "https://images.pexels.com/photos/242424/pexels-photo-242424.jpeg",
+  },
+  {
+    id: "18",
+    name: "Ella Lewis",
+    role: "Customer Support",
+    image: "https://images.pexels.com/photos/252525/pexels-photo-252525.jpeg",
+  },
+  {
+    id: "19",
+    name: "Alexander Walker",
+    role: "Sales Lead",
+    image: "https://images.pexels.com/photos/262626/pexels-photo-262626.jpeg",
+  },
+  {
+    id: "20",
+    name: "Grace Young",
+    role: "Operations Manager",
+    image: "https://images.pexels.com/photos/272727/pexels-photo-272727.jpeg",
+  },  {
+    id: "21",
+    name: "Olivia Brown",
+    role: "HR Manager",
+    image: "https://images.pexels.com/photos/141414/pexels-photo-141414.jpeg",
+  },  {
+    id: "22",
+    name: "Olivia Brown",
+    role: "HR Manager",
+    image: "https://images.pexels.com/photos/141414/pexels-photo-141414.jpeg",
+  },  {
+    id: "23",
+    name: "Olivia Brown",
+    role: "HR Manager",
+    image: "https://images.pexels.com/photos/141414/pexels-photo-141414.jpeg",
+  },
+];
 
 export default function HomePage() {
   const heroSectionRef = useRef();
@@ -150,10 +288,11 @@ export default function HomePage() {
           <img
             src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80"
             alt="Cybersecurity Background"
-            className="w-full h-full object-cover"
-            style={{ filter: "brightness(0.3)" }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/70" />
+            className="w-full h-full object-cover opacity-40 "
+            style={{ filter: "brightness(4)" }}
+          />{" "}
+          <div className="absolute inset-0 bg-gradient-to-b  from-black/40 via-black/60 to-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-b  from-black/50 via-black/50 to-black/50" />
         </div>
         <div className="absolute inset-0 transition-all duration-500 ease-in-out" />
 
@@ -204,6 +343,49 @@ export default function HomePage() {
         ref={featuresSectionRef}
         style={{ marginTop: "100vh" }}
       >
+        {" "}
+        {/* Stats Section */}
+        <section className="py-16 bg-black/40 backdrop-blur-3xl border-gray-800">
+          <div className="container mx-auto px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.6 }}
+              >
+                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">50+</h3>
+                <p className="text-gray-300">Active Members</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">20+</h3>
+                <p className="text-gray-300">Workshops</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+              >
+                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">10+</h3>
+                <p className="text-gray-300">CTF Competitions</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+              >
+                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">5+</h3>
+                <p className="text-gray-300">Partner Universities</p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
         {/* Features Section */}
         <section className="py-20 bg-transparent">
           <div className="container mx-auto px-6">
@@ -216,6 +398,7 @@ export default function HomePage() {
               <h2 className="text-3xl font-bold mb-4">
                 Why Choose CyberAnzen?
               </h2>
+
               <div className="w-24 h-1 bg-[#01ffdb] mx-auto mb-8"></div>
               <p className="text-gray-300 max-w-2xl mx-auto">
                 Join a community dedicated to exploring and mastering
@@ -299,53 +482,21 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
           </div>
-        </section>
+        </section>{" "}
+        {/* Teans Section */}
+        <section className="relative py-20">
+          {/* Glass-like background */}
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-md rounded-xl z-0"></div>
 
-        {/* Stats Section */}
-        <section className="py-16 bg-black/40 backdrop-blur-3xl border-gray-800">
-          <div className="container mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.6 }}
-              >
-                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">50+</h3>
-                <p className="text-gray-300">Active Members</p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
-              >
-                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">20+</h3>
-                <p className="text-gray-300">Workshops</p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-              >
-                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">10+</h3>
-                <p className="text-gray-300">CTF Competitions</p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-              >
-                <h3 className="text-4xl font-bold text-[#01ffdb] mb-2">5+</h3>
-                <p className="text-gray-300">Partner Universities</p>
-              </motion.div>
-            </div>
+          <div className="relative z-10 max-w-full mx-auto px-4 text-center text-white">
+            <h2 className="text-4xl font-bold mb-15">
+              Our Team and Supporters
+            </h2>
+            <TeamScroll members={teamMembers} />
           </div>
         </section>
-
         {/* CTA Section */}
-        <section className="py-20 bg-transparent">
+        {/* <section className="py-20 bg-transparent">
           <div className="container mx-auto px-6">
             <motion.div
               className="backdrop-blur-lg p-8 rounded-xl border-2 border-gray-700 hover:border-[#01ffdb]/30 transition-all group bg-transparent"
@@ -391,8 +542,7 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
-        </section>
-
+        </section> */}
         {/* Upcoming Events Preview */}
         {/* <section className="py-16  bg-gradient-to-l from-gray-500/10  via-gray-700/30 backdrop-blur-lg  to-black/30">
           <div className="container mx-auto px-6">
