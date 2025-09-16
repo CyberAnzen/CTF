@@ -223,6 +223,8 @@ CTFprogress.statics.fetchProgress = async function (userId, challengeId) {
       difficulty: Challenge.difficulty,
       tags: Challenge.tags || [],
       attachments: Challenge.attachments || [],
+      Author: Challenge.Author || null,
+
       challengeNumber: Challenge.challengeNumber,
     };
     return { Flag_Submitted: !!exist.Flag_Submitted, Visited: true, ...data };
@@ -255,6 +257,8 @@ CTFprogress.statics.fetchProgress = async function (userId, challengeId) {
     difficulty: Challenge.difficulty,
     tags: Challenge.tags || [],
     attachments: Challenge.attachments || [],
+    Author: Challenge.Author || null,
+
     challengeNumber: Challenge.challengeNumber,
   };
 

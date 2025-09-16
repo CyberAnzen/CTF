@@ -335,6 +335,8 @@ CTFTeamSchema.statics.fetchProgress = async function (teamId, challengeId) {
       difficulty: Challenge.difficulty,
       tags: Challenge.tags || [],
       attachments: Challenge.attachments || [],
+      Author: Challenge.Author || null,
+
       challengeNumber: Challenge.challengeNumber,
     };
 
@@ -374,6 +376,7 @@ CTFTeamSchema.statics.fetchProgress = async function (teamId, challengeId) {
     difficulty: Challenge.difficulty,
     tags: Challenge.tags || [],
     attachments: Challenge.attachments || [],
+    Author: Challenge.Author || null,
     challengeNumber: Challenge.challengeNumber,
   };
 
