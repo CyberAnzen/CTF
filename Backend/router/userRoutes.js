@@ -87,7 +87,7 @@ const loginOnly = [
   TimeStamp(2),
   loginLimiter,
   xssSanitizer(),
-  requireTurnstile, // verifies Turnstile token, calls next() on success
+  // requireTurnstile, // verifies Turnstile token, calls next() on success
 ];
 
 // Routes with applied rate limiters
