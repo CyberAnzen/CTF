@@ -122,8 +122,7 @@ function App() {
           <Route path="/logout" element={<Logout />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/about" element={<About />} />
-          {/* <Route path="/signup" element={<Signup />} /> */}
-          {/* <Route path="/forget-password" element={<ForgetPassword />} /> */}
+?          {/* <Route path="/forget-password" element={<ForgetPassword />} /> */}
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/profile" element={<Profile />} />

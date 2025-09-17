@@ -930,7 +930,7 @@ REFRESH_SECRET=SlDZzSrxdvbTcXRkedfKsYyEE0dNOgzmIF5on6gA3xI=
 
 NODE_ENV="production"
 
-#CTF
+#CTF*
 Flag_Attemtps=5
 
 #leaderboard

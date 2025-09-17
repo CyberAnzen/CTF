@@ -121,12 +121,12 @@ export default function Signup() {
     message: "",
   });
 
-  useEffect(() => {
-    if (loggedIn || User) {
-      fetchProfile();
-      navigate("/profile");
-    }
-  }, [loggedIn, User, navigate]);
+  // useEffect(() => {
+  //   if (loggedIn || User) {
+  //     fetchProfile();
+  //     navigate("/profile");
+  //   }
+  // }, [loggedIn, User, navigate]);
 
   const [formData, setFormData] = useState({
     username: "",
