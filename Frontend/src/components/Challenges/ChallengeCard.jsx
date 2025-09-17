@@ -7,7 +7,7 @@ const ChallengeCard = ({
   redColor = "#E53935",
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  console.log(Challenge);
+  // console.log(Challenge);
 
   // Calculate hover scale factor (5% larger when hovered)
   const hoverScale = 1;
@@ -40,7 +40,15 @@ const ChallengeCard = ({
   const overlayHeight = height - overlayInset * 2;
 
   // Colors
-  const brightRed = isHovered ? "rgba(23, 35, 38)" : "rgba(58, 75, 79)";
+  const brightRed =
+    Challenge?.difficulty === "hacker"
+      ? isHovered
+        ? "#B22222" // hover red
+        : "#8B0000" // normal dark red
+      : isHovered
+      ? "rgba(23, 35, 38)"
+      : "rgba(58, 75, 79)";
+
   const black = "#111111";
   const darkGrayTechMap = "#424242";
   const mediumGray = "#9E9E9E";

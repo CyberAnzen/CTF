@@ -93,7 +93,7 @@ const About = () => {
         </div>
 
         {/* Team Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {teamMembers.map((member, index) => (
             <a
               key={member.id}
@@ -103,7 +103,7 @@ const About = () => {
               className="group cursor-pointer"
               style={{ animationDelay: `${index * 150}ms` }}
             >
-              <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden transform transition-all duration-500 hover:scale-105 hover:-translate-y-2 animate-[fadeInUp_0.8s_ease-out_forwards] opacity-0">
+              <div className="relative w-full aspect-[3/4] scale-85 rounded-2xl overflow-hidden transform transition-all duration-500 hover:scale-95 hover:-translate-y-2 animate-[fadeInUp_0.8s_ease-out_forwards] opacity-0">
                 {/* Glass background */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/80 border-white/10 rounded-2xl"></div>
 

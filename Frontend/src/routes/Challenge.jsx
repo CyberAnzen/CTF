@@ -163,6 +163,7 @@ export default function Challenge() {
                 {ChallengesData?.challenges
                   ?.sort((a, b) => {
                     const order = {
+                      hacker: 0,
                       easy: 1,
                       intermediate: 2,
                       hard: 3,

@@ -146,9 +146,9 @@ export default function Footer() {
                 <div className="text-xs text-gray-300/70 text-right hidden sm:block">
                   <div>
                     Designed by <span className="text-[#01ffdb]">Vetrivel</span>
-                    , <span className="text-[#01ffdb]">Jafrin Sam</span>,{" "}
-                    <span className="text-[#01ffdb]">Sai Jhanav</span>,
-                    <span className="text-[#01ffdb]">Yogesh</span>
+                     , <span className="text-[#01ffdb]">Jafrin Sam</span>{" "}
+                    {/* <span className="text-[#01ffdb]">Sai Jhanav</span>,
+                    <span className="text-[#01ffdb]">Yogesh</span> */}
                   </div>
                   <div className="text-[10px]">© 2025 CyberAnzen</div>
                 </div>
