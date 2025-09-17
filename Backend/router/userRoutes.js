@@ -93,7 +93,7 @@ const loginOnly = [
 // Routes with applied rate limiters
 router.post(
   "/signup",
-  Auth({ requireAdmin: true }),
+  // Auth({ requireAdmin: true }),
 
   TimeStamp(2),
   // signupLimiter,
