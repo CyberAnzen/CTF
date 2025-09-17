@@ -451,7 +451,7 @@ const Navbar = () => {
     loggedIn
       ? { name: "Profile", icon: UserCircle, path: "/profile" }
       : { name: "Login", icon: User, path: "/login" },
-    { name: "About", icon: Info, path: "/about" },
+    // { name: "About", icon: Info, path: "/about" },
   ];
 
   // Device-specific animation configurations
