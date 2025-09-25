@@ -20,7 +20,7 @@ const createLogWorker = require("./logger/controller/workerLog");
 
 const app = express();
 const server = http.createServer(app);
-const FRONTEND_URL = "https://cyberanzen.icu";
+const FRONTEND_URL = "https://cyberanzen.netlify.app";
 
 async function startServer() {
   try {
