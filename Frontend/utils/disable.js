@@ -1,5 +1,5 @@
 // entry.js (bundle this into production only)
-import disableDevtool from "./disable-devtool";
+import disableDevtool from "disable-devtool";
 
 // initialize the package (basic)
 try {
