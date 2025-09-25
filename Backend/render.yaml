@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: backend
+    env: docker
+    buildCommand: docker build -t backend .
+    startCommand: docker compose up
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_HOST
+        value: redis
+      - key: REDIS_PORT
+        value: '6379'
+      - key: REDIS_PASSWORD
+        value: mysecretpassword
