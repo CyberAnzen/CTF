@@ -5,7 +5,7 @@ exports.logout = (req, res) => {
     path: "/",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production" ? true : false,
-    sameSite: "strict",
+    sameSite: "none",
   });
 
   // Clear the rememberMe cookie
@@ -14,7 +14,7 @@ exports.logout = (req, res) => {
     path: "/",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production" ? true : false,
-    sameSite: "strict",
+    sameSite: "none",
   });
   // Clear the CSRF token
   res.cookie("_csrf", "", {
@@ -22,7 +22,7 @@ exports.logout = (req, res) => {
     path: "/",
     httpOnly: false, // CSRF tokens are usually accessible by JS
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
   });
 
   return res.status(200).json({ message: "Logout successful" });
