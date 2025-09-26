@@ -91,6 +91,7 @@ async function startServer() {
     app.use("/api/profile", require("./router/profileRoutes"));
     app.use("/api/challenge", require("./router/CTFRoutes"));
     app.use("/api/team", require("./router/TeamRoutes"));
+    
     app.get(
       "/api/auth/csrf-token",
       Auth({ _CSRF: false }),

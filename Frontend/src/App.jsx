@@ -121,6 +121,7 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<Signup />} />
           {/* <Route path="/about" element={<About />} /> */}
 ?          {/* <Route path="/forget-password" element={<ForgetPassword />} /> */}
           <Route path="/terms" element={<Terms />} />
