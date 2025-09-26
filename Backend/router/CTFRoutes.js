@@ -96,10 +96,10 @@ router.get("/progress/user/:userId", getProgressByUserId);
 router.get("/progress/team/:teamId", getProgressByTeamId);
 router.get("/:ChallengeId", xssSanitizer(), Auth(), getChallenge);
 router.get("/:ChallengeId/hint/:hintId", xssSanitizer(), Auth(), getHint);
-// router.post(
-//   "/:ChallengeId/validateFlag",
-//   xssSanitizer(),
-//   Auth(),
-//   require("../controller/CTF/Challenges/User/validateFlag").validateFlag
-// );
+router.post(
+  "/:ChallengeId/validateFlag",
+  xssSanitizer(),
+  Auth(),
+  require("../controller/CTF/Challenges/User/validateFlag").validateFlag
+);
 module.exports = router;
