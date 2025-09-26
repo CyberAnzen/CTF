@@ -18,7 +18,7 @@ exports.login = async (req, res, next) => {
     if (!identifier || !password) {
       return res.status(404).json({ message: "Not Found" });
     }
-    
+
     const user = await User.findOne({
       $or: [
         { username: identifier },
@@ -64,7 +64,7 @@ exports.login = async (req, res, next) => {
     });
     res.cookie("refresh_token", refresh_token, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === "production" ? true : false,
+      secure: process.env.NODE_ENV === "production" ? true : false,
       sameSite: "none",
       maxAge: rememberMe ? 20 * 24 * 60 * 60 * 1000 : 3600000,
     });
