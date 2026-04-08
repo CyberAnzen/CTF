@@ -348,18 +348,18 @@ function DisplayChallenge() {
 
   /* ---------- Download helpers (replace existing ones) ---------- */
 
-  const buildUrl = (url) => {
+const buildUrl = (url) => {
     try {
-      // if absolute, return encoded absolute URL
       const u = new URL(url);
       return encodeURI(u.toString());
     } catch {
-      // relative path -> ensure exactly one slash between BACKEND_URL and url
-      const base = BACKEND_URL.endsWith("/")
-        ? BACKEND_URL.slice(0, -1)
-        : BACKEND_URL;
-      const path = url.startsWith("/") ? url : `/${url}`;
-      return encodeURI(`${base}/public/${path}`);
+      const base = BACKEND_URL.endsWith("/") ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
+      
+      // Keep the whole path but encode every folder/file name perfectly
+      const safePath = url.split('/').map(part => encodeURIComponent(part)).join('/');
+      const finalPath = safePath.startsWith("/") ? safePath : `/${safePath}`;
+      
+      return `${base}/public${finalPath}`;
     }
   };
 
