@@ -8,7 +8,7 @@ import React, {
 } from "react";
 
 // ✅ Hardcoded for the Cloudflare Tunnel
-const WS_URL = "wss://socket.cyberanzen.icu";
+const WS_URL = "wss://socket.cyberanzen.icu/ws/leaderboard";
 
 const SocketContext = createContext(undefined);
 
