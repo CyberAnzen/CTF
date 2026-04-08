@@ -59,6 +59,11 @@ export default function Challenge() {
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
+  // Safely extract the array whether the backend sends [] or { challenges: [] }
+  const challengesList = Array.isArray(ChallengesData) 
+    ? ChallengesData 
+    : ChallengesData?.challenges || [];
+
   return (
     <section className="min-h-screen  text-white">
       {/* put SVG defs in the DOM so child SVGs can use url(#id) */}
@@ -104,27 +109,39 @@ export default function Challenge() {
               loading ? "mt-10" : "mt-20"
             }`}
           >
-            {/* ✅ FIXED: Use 'loading' instead of '!ChallengesData' so empty DBs don't trap the UI in skeletons */}
             {loading ? (
               Array.from({ length: 40 }).map((_, index) => (
                 <ChallengeCardSkeleton key={index} scaleFactor={0.3} />
               ))
             ) : Admin ? (
               <>
-                {/* Admin always sees this card, even if the database is 100% empty */}
-                <AddChallengesCard />
-                {ChallengesData?.challenges?.map((challenge) => (
-                  <ModifyChallengesCard
-                    key={challenge._id}
-                    challenge={challenge}
-                    onCourseClick={handleChallengeClick}
-                  />
+                {/* 1. The ADD CARD (Always visible for Admin to create a new one) */}
+                <div 
+                  className="relative w-full h-full flex justify-center items-center transition-all duration-700 ease-out transform hover:z-10 hover:scale-105 opacity-0 translate-y-5 animate-cardAppear -mt-14"
+                  style={{ animationDelay: '0ms' }}
+                >
+                  <AddChallengesCard />
+                </div>
+
+                {/* 2. The MODIFY CARDS (Visible for every existing challenge) */}
+                {challengesList.map((challenge, index) => (
+                  <div
+                    key={challenge._id || index}
+                    className="relative w-full h-full flex justify-center items-center transition-all duration-700 ease-out transform hover:z-10 hover:scale-105 opacity-0 translate-y-5 animate-cardAppear -mt-14"
+                    style={{ animationDelay: `${(index + 1) * 80}ms` }}
+                  >
+                    <ModifyChallengesCard
+                      challenge={challenge}
+                      onCourseClick={handleChallengeClick}
+                    />
+                  </div>
                 ))}
               </>
             ) : (
               <>
-                {ChallengesData?.challenges?.length > 0 ? (
-                  ChallengesData.challenges
+                {/* Regular User View */}
+                {challengesList.length > 0 ? (
+                  challengesList
                     .sort((a, b) => {
                       const order = {
                         easy: 1,
