@@ -4,10 +4,11 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef
 } from "react";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL_W;
-const WS_URL = BACKEND_URL.replace(/^http(s?)/, "ws$1") + "/ws/leaderboard";
+// ✅ Hardcoded for the Cloudflare Tunnel
+const WS_URL = "wss://socket.cyberanzen.icu";
 
 const SocketContext = createContext(undefined);
 
@@ -23,10 +24,11 @@ export const SocketProvider = ({ children }) => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [clientCount, setClientCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
-  const wsRef = React.useRef(null);
-  const reconnectTimerRef = React.useRef(null);
+  const wsRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
 
   const connect = useCallback(() => {
+    // Clean up existing connection if it exists
     if (wsRef.current) {
       wsRef.current.onopen = null;
       wsRef.current.onmessage = null;
@@ -37,38 +39,45 @@ export const SocketProvider = ({ children }) => {
     }
 
     console.log("[WS] Connecting to:", WS_URL);
-    const newWs = new WebSocket(WS_URL);
-    wsRef.current = newWs;
+    
+    try {
+      const newWs = new WebSocket(WS_URL);
+      wsRef.current = newWs;
 
-    newWs.onopen = () => {
-      console.log("[WS] Connected to leaderboard");
-      setIsConnected(true);
-    };
+      newWs.onopen = () => {
+        console.log("[WS] Connected to leaderboard tunnel");
+        setIsConnected(true);
+      };
 
-    newWs.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "CLIENT_COUNT") {
-          setClientCount(data.totalClients);
-        } else if (data.type === "LEADERBOARD_UPDATE" && data.allRanks) {
-          setLeaderboardData(data.allRanks);
+      newWs.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "CLIENT_COUNT") {
+            setClientCount(data.totalClients);
+          } else if (data.type === "LEADERBOARD_UPDATE" && data.allRanks) {
+            setLeaderboardData(data.allRanks);
+          }
+        } catch (err) {
+          console.warn("[WS] Invalid message format:", err);
         }
-      } catch (err) {
-        console.warn("[WS] Invalid message:", err);
-      }
-    };
+      };
 
-    newWs.onclose = () => {
-      console.log("[WS] Disconnected. Reconnecting in 2s...");
-      setIsConnected(false);
-      reconnectTimerRef.current = setTimeout(connect, 2000);
-    };
+      newWs.onclose = (event) => {
+        setIsConnected(false);
+        // Don't log as error if it's a normal closure
+        console.log(`[WS] Connection closed (Code: ${event.code}). Reconnecting in 2s...`);
+        reconnectTimerRef.current = setTimeout(connect, 2000);
+      };
 
-    newWs.onerror = (err) => {
-      console.error("[WS] Error:", err);
-      setIsConnected(false);
-      newWs.close();
-    };
+      newWs.onerror = (err) => {
+        console.error("[WS] Connection Error:", err);
+        setIsConnected(false);
+        // onclose will trigger the reconnection logic
+      };
+    } catch (error) {
+      console.error("[WS] Failed to create WebSocket instance:", error);
+      reconnectTimerRef.current = setTimeout(connect, 5000);
+    }
   }, []);
 
   const reconnect = useCallback(() => {
@@ -87,6 +96,8 @@ export const SocketProvider = ({ children }) => {
         clearTimeout(reconnectTimerRef.current);
       }
       if (wsRef.current) {
+        // Remove listeners before closing to prevent state updates on unmounted component
+        wsRef.current.onclose = null; 
         wsRef.current.close();
       }
     };
