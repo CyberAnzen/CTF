@@ -6,7 +6,6 @@ import { debounce } from "lodash";
 import ParticleBackground from "../components/Login/ParticleBackground";
 import UserIcon from "../components/Login/UserIcon";
 import "../index.css";
-import Turnstile from "react-turnstile";
 import { useAppContext } from "../context/AppContext";
 import { ChevronDown } from "lucide-react";
 
@@ -110,8 +109,6 @@ export default function Signup() {
   const { loggedIn, setLoggedIn, User, fetchProfile } = useAppContext();
 
   const navigate = useNavigate();
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   // Popup states
   const [popup, setPopup] = useState({
@@ -279,7 +276,6 @@ export default function Signup() {
     setIsLoading(true);
     try {
       const numericData = {
-        captcha: captchaToken,
         ...data,
         mobile: parseInt(data.mobile, 10) || 0,
         year: parseInt(data.year, 10) || 0,
@@ -1400,29 +1396,10 @@ export default function Signup() {
                         )}
                       </div>
 
-                      {/* Captcha Cloudflare */}
-                      <div className="flex justify-center mb-4">
-                        <div className="w-full max-w-sm">
-                          <Turnstile
-                            sitekey={import.meta.env.VITE_CF_SITE_KEY}
-                            onVerify={(token) => {
-                              setCaptchaToken(token);
-                              setCaptchaVerified(true);
-                            }}
-                            onExpire={() => {
-                              setCaptchaToken("");
-                              setCaptchaVerified(false);
-                            }}
-                            theme="dark"
-                            size="flexible"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Submit Button - hidden until form complete and captcha verified */}
+                      {/* Submit Button - hidden until form complete */}
                       <div
                         className={`transition-all duration-700 ease-out transform ${
-                          isFormComplete() && captchaVerified
+                          isFormComplete()
                             ? "opacity-100 translate-y-0"
                             : "opacity-0 -translate-y-6 pointer-events-none"
                         }`}
@@ -1432,7 +1409,6 @@ export default function Signup() {
                           type="submit"
                           disabled={
                             !isFormComplete() ||
-                            !captchaVerified ||
                             isLoading ||
                             submitDisabled
                           }
@@ -1478,19 +1454,6 @@ export default function Signup() {
           <div className="absolute inset-0 bg-[#01ffdb]/5 blur-xl -z-10" />
         </div>
       </div>
-
-      {/* Additional cyberpunk elements - Hidden on mobile */}
-      {/* <div className="hidden lg:block absolute top-10 right-10 text-[#01ffdb]/30 font-mono text-xs">
-        <div>SYS_STATUS: ONLINE</div>
-        <div>REG_MODE: ACTIVE</div>
-        <div>CONN_STATE: SECURE</div>
-      </div>
-
-      <div className="hidden lg:block absolute bottom-10 left-10 text-[#01ffdb]/30 font-mono text-xs">
-        <div>PROTOCOL: HTTPS/2.0</div>
-        <div>ENCRYPTION: AES-256</div>
-        <div>NODE: REGISTRATION</div>
-      </div> */}
     </div>
   );
 }
