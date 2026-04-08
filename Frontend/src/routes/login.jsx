@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import Turnstile from "react-turnstile";
 import { User, Lock, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ParticleBackground from "../components/Login/ParticleBackground";
@@ -17,8 +16,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { fp } = useAppContext();
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -48,9 +45,7 @@ export default function LoginPage() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isMacOS = navigator.platform.indexOf("Mac") > -1;
-    const isLinux = navigator.platform.indexOf("Linux") > -1;
-
+    
     // Improved scroll handling based on device type
     if (isDesktop) {
       // Lock scroll only on desktop
@@ -130,29 +125,16 @@ export default function LoginPage() {
     };
   }, []);
 
-  // Show submit button with a short delay after captcha success and animate it
+  // Show submit button automatically after component mounts
   useEffect(() => {
-    let t;
-    if (captchaVerified) {
-      // hide first to allow animation reset, then show after delay
-      setShowSubmit(false);
-      t = setTimeout(() => setShowSubmit(true), 700); // 700ms delay before showing
-    } else {
-      setShowSubmit(false);
-    }
+    const t = setTimeout(() => setShowSubmit(true), 300);
     return () => clearTimeout(t);
-  }, [captchaVerified]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-
-    if (!captchaToken) {
-      setError("Please complete the captcha");
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const res = await fetch(`${BACKEND_URL}/user/login`, {
@@ -164,7 +146,6 @@ export default function LoginPage() {
           password,
           rememberMe,
           fp,
-          captcha: captchaToken,
         }),
       });
 
@@ -332,8 +313,8 @@ export default function LoginPage() {
                           checked={rememberMe}
                           onChange={(e) => setRememberMe(e.target.checked)}
                           className="w-4 h-4 bg-transparent border-2 border-[#01ffdb]/50 rounded-none 
-                                   checked:bg-[#01ffdb] checked:border-[#01ffdb] 
-                                   focus:ring-[#01ffdb]/50 focus:ring-2"
+                                     checked:bg-[#01ffdb] checked:border-[#01ffdb] 
+                                     focus:ring-[#01ffdb]/50 focus:ring-2"
                         />
                         <label
                           htmlFor="remember-me"
@@ -350,29 +331,7 @@ export default function LoginPage() {
                       </Link>
                     </div>
 
-                    {/* Captcha */}
-                    <div
-                      className="flex justify-center"
-                      onContextMenu={(e) => e.preventDefault()}
-                    >
-                      <div className="w-full max-w-sm">
-                        <Turnstile
-                          sitekey={import.meta.env.VITE_CF_SITE_KEY}
-                          onVerify={(token) => {
-                            setCaptchaToken(token);
-                            setCaptchaVerified(true);
-                          }}
-                          onExpire={() => {
-                            setCaptchaToken("");
-                            setCaptchaVerified(false);
-                          }}
-                          theme="dark"
-                          size="flexible"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Submit Button - hidden until captcha success, fades in with animation */}
+                    {/* Submit Button */}
                     <div
                       className={`transition-all duration-700 ease-out transform ${
                         showSubmit
@@ -383,7 +342,7 @@ export default function LoginPage() {
                     >
                       <button
                         type="submit"
-                        disabled={isLoading || !captchaVerified}
+                        disabled={isLoading}
                         className="cyber-button w-full py-2 sm:py-3 px-4 sm:px-6 bg-[#01ffdb]/10 border-2 border-[#01ffdb]/50
                                  text-[#01ffdb] font-mono text-sm sm:text-base lg:text-lg font-bold
                                  hover:bg-[#01ffdb]/20 hover:border-[#01ffdb]
@@ -427,19 +386,6 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-[#01ffdb]/5 blur-xl -z-10" />
         </div>
       </div>
-
-      {/* Additional cyberpunk elements - Hidden on mobile/tablet */}
-      {/* <div className="hidden xl:block absolute top-15 right-10 text-[#01ffdb]/30 font-mono text-xs">
-        <div>SYS_STATUS: ONLINE</div>
-        <div>AUTH_LEVEL: PENDING</div>
-        <div>CONN_STATE: SECURE</div>
-      </div>
-
-      <div className="hidden xl:block absolute bottom-15 left-10 text-[#01ffdb]/30 font-mono text-xs">
-        <div>PROTOCOL: HTTPS/2.0</div>
-        <div>ENCRYPTION: AES-256</div>
-        <div>NODE: PRIMARY</div>
-      </div> */}
     </div>
   );
 }
