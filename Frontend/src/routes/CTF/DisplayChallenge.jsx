@@ -348,18 +348,19 @@ function DisplayChallenge() {
 
   /* ---------- Download helpers (replace existing ones) ---------- */
 
-const buildUrl = (url) => {
+  // ✅ FIXED: Hardcoded to your exact Cloudflare Tunnel /public path
+  const buildUrl = (url) => {
     try {
-      const u = new URL(url);
-      return encodeURI(u.toString());
-    } catch {
-      const base = BACKEND_URL.endsWith("/") ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
-      
       // Keep the whole path but encode every folder/file name perfectly
+      // e.g. "CTF/Challenges/.../file.png" -> "CTF/Challenges/.../file%20name.png"
       const safePath = url.split('/').map(part => encodeURIComponent(part)).join('/');
-      const finalPath = safePath.startsWith("/") ? safePath : `/${safePath}`;
+      const finalPath = safePath.startsWith("/") ? safePath.slice(1) : safePath;
       
-      return `${base}/public${finalPath}`;
+      // Hardcoded direct route
+      return `https://api.cyberanzen.icu/public/${finalPath}`;
+    } catch (error) {
+      console.error("Error building URL", error);
+      return url;
     }
   };
 
@@ -591,9 +592,11 @@ const buildUrl = (url) => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+  
   if (!display) {
     return <LoadingSkeleton />;
   }
+  
   // Mobile blocking overlay
   if (isMobile) {
     return (
@@ -617,6 +620,7 @@ const buildUrl = (url) => {
       </div>
     );
   }
+  
   if (display) {
     return (
       <div className="h-[85vh] relative overflow-hidden">
